@@ -80,7 +80,7 @@ class WodStatefulWidget extends StatefulWidget {
 class _WodStatefulWidgetState extends State<WodStatefulWidget> {
   Model model = Model();
   List<bool> isRxSelected = [true, false];
-  Future<WoD> futureWoD;
+  Future<Map<String, dynamic>> futureWoD;
 
   @override
   void initState() {
@@ -99,14 +99,14 @@ class _WodStatefulWidgetState extends State<WodStatefulWidget> {
           ),Card(
             child : Container(
               padding : EdgeInsets.all(20.0),
-              child : FutureBuilder<WoD>(
+              child : FutureBuilder<Map<String, dynamic>>(
                 future: futureWoD,
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     if (isRxSelected[0]) {
-                      return Text(snapshot.data.desc_rx, style: TextStyle(fontSize: 18.0));
+                      return Text(snapshot.data['description']['rx'], style: TextStyle(fontSize: 18.0));
                     } else {
-                      return Text(snapshot.data.desc_scale, style: TextStyle(fontSize: 18.0));
+                      return Text(snapshot.data['description']['scale'], style: TextStyle(fontSize: 18.0));
                     }
                   } else if (snapshot.hasError) {
                     return Text("${snapshot.error}");

@@ -5,23 +5,19 @@ import 'dart:async';
 import 'dart:convert';
 
 class WoD {
-  final int id;
-  final String date;
-  final int wid;
-  final String name;
-  final String desc_rx;
-  final String desc_scale;
+  final Map<String, String> description;
+  final List<Map<String, dynamic>> round;
+  final String type;
+  final int time;
 
-  WoD({this.id, this.date, this.wid, this.name, this.desc_rx, this.desc_scale});
+  WoD({this.description, this.round, this.type, this.time});
 
   factory WoD.fromJson(Map<String, dynamic> json) {
     return WoD(
-        id: json['id'],
-        date: json['date'],
-        wid: json['wid'],
-        name: json['name'],
-        desc_rx: json['desc_rx'],
-        desc_scale: json['desc_scale']
+        description: json['description'],
+        round: json['round'],
+        type: json['type'],
+        time: json['time']
     );
   }
 }
@@ -48,14 +44,17 @@ class Score {
   }
 }
 
-Future<WoD> fetch_wod() async {
+Future<Map<String, dynamic>> fetch_wod() async {
   print('Fetching data');
   final response = await http.get('http://127.0.0.1:5000/wod');
-  print(response.body);
+  //print(response.body);
   if (response.statusCode == 200) {
     // If the server did return a 200 OK response,
     // then parse the JSON.
-    return WoD.fromJson(json.decode(response.body));
+    var myjson = json.decode(response.body) as Map<String, dynamic>;
+    //var whatev = WoD.fromJson(myjson);
+    //print(whatev);
+    return myjson;
   } else {
     // If the server did not return a 200 OK response,
     // then throw an exception.
