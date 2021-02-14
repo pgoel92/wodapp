@@ -80,12 +80,12 @@ class WodStatefulWidget extends StatefulWidget {
 class _WodStatefulWidgetState extends State<WodStatefulWidget> {
   Model model = Model();
   List<bool> isRxSelected = [true, false];
-  Future<Map<String, dynamic>> futureWoD;
+  DateTime date = DateTime.now();
+  int daysAgo = 0;
 
   @override
   void initState() {
     super.initState();
-    futureWoD = fetch_wod();
   }
 
   @override
@@ -95,18 +95,31 @@ class _WodStatefulWidgetState extends State<WodStatefulWidget> {
         children: [
           Padding(
             padding : EdgeInsets.all(10.0),
-            child : Text(DateFormat.yMMMMEEEEd().format(DateTime.now()), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25.0)),
+            child : Row(
+              children : [
+                IconButton(icon: Icon(IconData(0xe5a8, fontFamily: 'MaterialIcons', matchTextDirection: true)), onPressed: _subtractDate),
+                Text(DateFormat.yMMMMEEEEd().format(date.subtract(new Duration(days: daysAgo))), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25.0)),
+                IconButton(icon: Icon(IconData(0xe5b0, fontFamily: 'MaterialIcons', matchTextDirection: true)), onPressed: _addDate)
+              ]
+            )
           ),Card(
             child : Container(
               padding : EdgeInsets.all(20.0),
               child : FutureBuilder<Map<String, dynamic>>(
-                future: futureWoD,
+                future: fetch_wod(DateFormat('yyyy-MM-dd').format(date.subtract(new Duration(days: daysAgo)))),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
-                    if (isRxSelected[0]) {
-                      return Text(snapshot.data['description']['rx'], style: TextStyle(fontSize: 18.0));
+                    var data = snapshot.data;
+                    if (data.containsKey("description")) {
+                      if (isRxSelected[0]) {
+                        return Text(snapshot.data['description']['rx'],
+                            style: TextStyle(fontSize: 18.0));
+                      } else {
+                        return Text(snapshot.data['description']['scale'],
+                            style: TextStyle(fontSize: 18.0));
+                      }
                     } else {
-                      return Text(snapshot.data['description']['scale'], style: TextStyle(fontSize: 18.0));
+                      return Text("Rest day", style: TextStyle(fontSize: 18.0));
                     }
                   } else if (snapshot.hasError) {
                     return Text("${snapshot.error}");
@@ -121,6 +134,13 @@ class _WodStatefulWidgetState extends State<WodStatefulWidget> {
       ]
     ));
   }
+
+  void _subtractDate () {
+    setState(() { daysAgo = daysAgo + 1; });
+  }
+  void _addDate () {
+    setState(() { daysAgo = daysAgo - 1; });
+  }
 }
 
 class AddScoreWidget extends StatefulWidget {
@@ -133,6 +153,14 @@ class AddScoreWidget extends StatefulWidget {
 class _ScoreWidgetState extends State<AddScoreWidget> {
   final _formKey = GlobalKey<FormState>();
   Model model = Model();
+  String _selectedAthlete;
+  Future<List<dynamic>> futureAthletes;
+
+  @override
+  void initState() {
+    super.initState();
+    futureAthletes = fetch_athletes();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -148,44 +176,57 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Row(
-                    children : [Expanded(
-                    child : Card(child : Container(
-                      height : 50,
-                      child : TextFormField(
-                      decoration: const InputDecoration(
-                        labelText: "Name",
-                        border: OutlineInputBorder()
+                    children : [
+                      Expanded(
+                        child : FutureBuilder<List<dynamic>>(
+                          future: futureAthletes,
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData) {
+                              return Card(child : new DropdownButtonFormField<String>(
+                                  value : _selectedAthlete,
+                                  items: getAthleteNames(snapshot.data).map((dynamic value) {
+                                    return new DropdownMenuItem<String>(
+                                    value: value,
+                                    child: new Text(value),
+                                    );
+                                  }).toList(),
+                                  onChanged: (newValue) {
+                                    setState(() {_selectedAthlete = newValue;});
+                                    },
+                                  onSaved: (String value) {
+                                    model.name = value;
+                                  }
+                                )
+                              );
+                            } else if (snapshot.hasError) {
+                              return Text("${snapshot.error}");
+                            }
+
+                            // By default, s  how a loading spinner.
+                            return CircularProgressIndicator();
+                          })
                       ),
-                      validator: (value) {
-                        if (value.isEmpty) {
-                          return 'Please enter some text';
-                        }
-                        return null;
-                      },
-                      onSaved: (String value) {
-                        model.name = value;
-                      },
-                    ),
-                  ))),
-                  Expanded(
-                    child : Card(child : Container(
-                      height : 50,
-                    child : TextFormField(
-                      decoration: const InputDecoration(
-                        labelText: "Score",
-                        border: OutlineInputBorder()
-                      ),
-                      validator: (value) {
-                        if (value.isEmpty) {
-                          return 'Please enter some text';
-                        }
-                        return null;
-                      },
-                      onSaved: (String value) {
-                        model.score = value;
-                      },
-                    ),
-                  )))]),
+                    Expanded(
+                      child : Card(child : Container(
+                        height : 50,
+                        child : TextFormField(
+                          decoration: const InputDecoration(
+                            labelText: "Score",
+                            border: OutlineInputBorder()
+                          ),
+                          validator: (value) {
+                            if (value.isEmpty) {
+                              return 'Please enter some text';
+                            }
+                            return null;
+                          },
+                          onSaved: (String value) {
+                            model.score = value;
+                          }
+                        ))
+                      ))
+                    ]
+                  ),
                   Card(child : TextFormField(
                       decoration: const InputDecoration(
                         labelText: "Notes",
@@ -240,6 +281,9 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
               )
         )]
     )]);
+  }
+  List<dynamic> getAthleteNames(athletes) {
+    return athletes.map((athlete) => (athlete['first_name'] + " " + athlete['last_name'])).toList();
   }
 }
 

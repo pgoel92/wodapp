@@ -44,9 +44,9 @@ class Score {
   }
 }
 
-Future<Map<String, dynamic>> fetch_wod() async {
-  print('Fetching data');
-  final response = await http.get('http://127.0.0.1:5000/wod');
+Future<Map<String, dynamic>> fetch_wod(date) async {
+  print('Fetching wod for date ${date}');
+  final response = await http.get('http://127.0.0.1:5000/wod?date=$date');
   //print(response.body);
   if (response.statusCode == 200) {
     // If the server did return a 200 OK response,
@@ -62,8 +62,27 @@ Future<Map<String, dynamic>> fetch_wod() async {
   }
 }
 
+Future<List<dynamic>> fetch_athletes() async {
+  print('Fetching athletes');
+  final response = await http.get('http://127.0.0.1:5000/athletes');
+  //print(response.body);
+  if (response.statusCode == 200) {
+    // If the server did return a 200 OK response,
+    // then parse the JSON.
+    var myjson = json.decode(response.body) as List<dynamic>;
+    print(myjson);
+    //var whatev = WoD.fromJson(myjson);
+    //print(whatev);
+    return myjson;
+  } else {
+    // If the server did not return a 200 OK response,
+    // then throw an exception.
+    throw Exception('Failed to load athletes');
+  }
+}
+
 Future<List<Score>> fetch_scores() async {
-  print('Fetching data');
+  print('Fetching scores');
   final response = await http.get('http://127.0.0.1:5000/scores');
   print(response.body);
   if (response.statusCode == 200) {
