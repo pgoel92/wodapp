@@ -70,7 +70,6 @@ Future<List<dynamic>> fetch_athletes() async {
     // If the server did return a 200 OK response,
     // then parse the JSON.
     var myjson = json.decode(response.body) as List<dynamic>;
-    print(myjson);
     //var whatev = WoD.fromJson(myjson);
     //print(whatev);
     return myjson;

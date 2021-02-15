@@ -155,6 +155,7 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
   Model model = Model();
   String _selectedAthlete;
   Future<List<dynamic>> futureAthletes;
+  String time = '12';
 
   @override
   void initState() {
@@ -168,17 +169,14 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children : [
       Container(padding : EdgeInsets.all(10),child : Text('Add Score', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 25))),
-      Column(mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      Card(child : Column(mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children : [Form(
               key: _formKey,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Row(
-                    children : [
-                      Expanded(
-                        child : FutureBuilder<List<dynamic>>(
+                        /*FutureBuilder<List<dynamic>>(
                           future: futureAthletes,
                           builder: (context, snapshot) {
                             if (snapshot.hasData) {
@@ -204,10 +202,9 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
 
                             // By default, s  how a loading spinner.
                             return CircularProgressIndicator();
-                          })
-                      ),
-                    Expanded(
-                      child : Card(child : Container(
+                          }),*/
+                  amrapScoreForm,
+                    /*Card(child : Container(
                         height : 50,
                         child : TextFormField(
                           decoration: const InputDecoration(
@@ -224,9 +221,7 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
                             model.score = value;
                           }
                         ))
-                      ))
-                    ]
-                  ),
+                      ),
                   Card(child : TextFormField(
                       decoration: const InputDecoration(
                         labelText: "Notes",
@@ -246,7 +241,7 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
                         model.notes = value;
                       },
                     ),
-                  ),
+                  ),*/
                   Center(
                     child: Padding(
                       padding: const EdgeInsets.all(10.0),
@@ -280,8 +275,48 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
                 ],
               )
         )]
-    )]);
+    ))]);
   }
+
+  Column get amrapScoreForm => Column(children : [
+    Row(children : [
+      SizedBox(width : 40, child : Card(child : Container(
+        height : 40,
+        child : TextFormField(
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'Please enter some text';
+              }
+              return null;
+            },
+            onSaved: (String value) {
+              model.score = value;
+            }
+        ))
+      )),
+      Expanded(child : Text('rounds in ' + time + ' mins of :', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
+    ])] +
+    <dynamic>[{"movement" : "pull ups", "reps" : 5}, {"movement" : "push ups", "reps" : 10}, {"movement" : "squats", "reps" : 15}].map((dynamic mov) {
+      return Row(children : [
+        SizedBox(width : 40, child : Card(child : Container(
+            height : 40,
+            child : TextFormField(
+                initialValue : mov['reps'].toString(),
+                validator: (value) {
+                  if (value.isEmpty) {
+                    return 'Please enter some text';
+                  }
+                  return null;
+                },
+                onSaved: (String value) {
+                  model.score = value;
+                }
+            ))
+        )),
+        Expanded(child : Text(mov['movement'], style : TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
+    ]);}).toList()
+  );
+
   List<dynamic> getAthleteNames(athletes) {
     return athletes.map((athlete) => (athlete['first_name'] + " " + athlete['last_name'])).toList();
   }
