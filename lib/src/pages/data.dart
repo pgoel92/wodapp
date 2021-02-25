@@ -110,8 +110,8 @@ Future<http.Response> put_data(Map<String, dynamic> body) async {
   );
 }
 
-Future<void> put_score(Model data) async {
-  final http.Response response = await put_data({'wod_id': 123, 'cid': 3, 'cname' : data.name, 'score': data.score, 'notes': data.notes});
+Future<void> put_score(dynamic wod, Model data) async {
+  final http.Response response = await put_data({'wod_id': 123, 'cid': 3, 'wod' : wod, 'score': data.score, 'notes': data.notes});
   if (response.statusCode == 201) {
     // If the server did return a 201 CREATED response,
     // then parse the JSON.

@@ -70,6 +70,18 @@ class Model {
   }
 }
 
+class ScaledWoD {
+  dynamic rounds;
+
+  ScaledWoD({this.rounds});
+
+  Map<String, String> toJson() {
+    return {
+      'rounds': rounds
+    };
+  }
+}
+
 class WodStatefulWidget extends StatefulWidget {
   WodStatefulWidget({Key key}) : super(key: key);
 
@@ -153,9 +165,11 @@ class AddScoreWidget extends StatefulWidget {
 class _ScoreWidgetState extends State<AddScoreWidget> {
   final _formKey = GlobalKey<FormState>();
   Model model = Model();
+  ScaledWoD scaledWoD = ScaledWoD();
   String _selectedAthlete;
   Future<List<dynamic>> futureAthletes;
   String time = '12';
+  var WoD = [{"movement" : "pull ups", "reps" : 5, "weight_lbs" : 10}, {"movement" : "push ups", "reps" : 10}, {"movement" : "squats", "reps" : 15}];
 
   @override
   void initState() {
@@ -203,7 +217,7 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
                             // By default, s  how a loading spinner.
                             return CircularProgressIndicator();
                           }),*/
-                  amrapScoreForm,
+                  amrapScoreForm(),
                     /*Card(child : Container(
                         height : 50,
                         child : TextFormField(
@@ -256,8 +270,8 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
                           if (_formKey.currentState.validate()) {
                             // Process data.
                             _formKey.currentState.save();
-                            print(model);
-                            put_score(model);
+                            print(WoD);
+                            put_score(WoD, model);
                             Navigator.of(context).push(
                                 MaterialPageRoute<void>(
                                 // NEW lines from here...
@@ -278,44 +292,46 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
     ))]);
   }
 
-  Column get amrapScoreForm => Column(children : [
-    Row(children : [
-      SizedBox(width : 40, child : Card(child : Container(
+  SizedBox scoreInputBox(String initialValue, FormFieldSetter<String> onSaved) {
+    return SizedBox(width : 40, child : Card(child : Container(
         height : 40,
         child : TextFormField(
+            initialValue : initialValue,
             validator: (value) {
               if (value.isEmpty) {
                 return 'Please enter some text';
               }
               return null;
             },
-            onSaved: (String value) {
-              model.score = value;
-            }
+            onSaved: onSaved
         ))
-      )),
-      Expanded(child : Text('rounds in ' + time + ' mins of :', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
-    ])] +
-    <dynamic>[{"movement" : "pull ups", "reps" : 5}, {"movement" : "push ups", "reps" : 10}, {"movement" : "squats", "reps" : 15}].map((dynamic mov) {
-      return Row(children : [
-        SizedBox(width : 40, child : Card(child : Container(
-            height : 40,
-            child : TextFormField(
-                initialValue : mov['reps'].toString(),
-                validator: (value) {
-                  if (value.isEmpty) {
-                    return 'Please enter some text';
-                  }
-                  return null;
-                },
-                onSaved: (String value) {
-                  model.score = value;
-                }
-            ))
-        )),
-        Expanded(child : Text(mov['movement'], style : TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
-    ]);}).toList()
-  );
+    ));
+  }
+  Column amrapScoreForm() {
+    //var round = [{"movement" : "pull ups", "reps" : 5, "weight_lbs" : 10}, {"movement" : "push ups", "reps" : 10}, {"movement" : "squats", "reps" : 15}];
+    return Column(children : [
+      Row(children : [
+        scoreInputBox("", (String value) { model.score = value; }),
+        Expanded(child : Text('rounds in ' + time + ' mins of :', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
+      ])] +
+        WoD.map((dynamic mov) {
+        var children = [
+          scoreInputBox(mov['reps'].toString(), (String value) {
+            mov['reps'] = value;
+          }),
+          Text(mov['movement'], style : TextStyle(fontWeight: FontWeight.bold, fontSize: 18))
+        ];
+        if(mov["weight_lbs"] != null) {
+          children = children + [
+            scoreInputBox(mov['weight_lbs'].toString(), (String value) {
+              mov['weight_lbs'] = value;
+            }),
+            Text('lbs', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 18))
+          ];
+        }
+        return Row(children : children);}).toList()
+    );
+  }
 
   List<dynamic> getAthleteNames(athletes) {
     return athletes.map((athlete) => (athlete['first_name'] + " " + athlete['last_name'])).toList();
@@ -363,7 +379,7 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
                               width : 150,
                               padding : EdgeInsets.symmetric(horizontal: 5),
                               child : Text(
-                              score.cname,
+                              score.cname??'',
                               style: TextStyle(fontSize: 18.0),
                             )),
                           Container(
@@ -377,7 +393,7 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
                                 width : 150,
                             padding : EdgeInsets.symmetric(horizontal: 5),
                           child : Text(
-                              score.notes,
+                              score.notes??'',
                               style: TextStyle(fontSize: 18.0),
                             ))
                           ]
@@ -391,7 +407,7 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
                   ).toList();
                   return Flexible(child :
                   Column(children : [
-                    ListView(children : divided, shrinkWrap: true),
+                    Expanded(child : ListView(children : divided, shrinkWrap: true)),
                       Padding(
                           padding: const EdgeInsets.all(10.0),
                           child : IconButton(icon: Icon(CupertinoIcons.plus_circle), onPressed: _pushSaved)
