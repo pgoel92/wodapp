@@ -45,6 +45,25 @@ MaterialApp homePage = MaterialApp(
     )),
 ));
 
+Scaffold scorePage = Scaffold(
+    appBar: AppBar(
+      title: appTitle,
+    ),
+    body: Center(
+      child : Container(
+          padding : EdgeInsets.symmetric(vertical : verticalPadding),
+          child : SizedBox(
+              width : mainWidth,
+              child : Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children : [
+                    WodStatefulWidget(),
+                    AddScoreWidget()
+                  ]
+              )
+          )),
+    ));
+
 class _MyAppState extends State<MyApp> {
 
   @override
@@ -55,32 +74,26 @@ class _MyAppState extends State<MyApp> {
 
 
 class Model {
+  WoD wod;
+  WoD updatedWod;
   String name;
   String score;
   String notes;
 
-  Model({this.name, this.score, this.notes});
+  Model({this.name, this.score, this.notes, this.wod, this.updatedWod});
 
   Map<String, String> toJson() {
     return {
       'name': name,
       'score': score,
-      'notes' : notes
+      'notes' : notes,
+      'wod' : wod.toString(),
+      'updatedWod' : updatedWod.toString()
     };
   }
 }
 
-class ScaledWoD {
-  dynamic rounds;
-
-  ScaledWoD({this.rounds});
-
-  Map<String, String> toJson() {
-    return {
-      'rounds': rounds
-    };
-  }
-}
+Model model = Model();
 
 class WodStatefulWidget extends StatefulWidget {
   WodStatefulWidget({Key key}) : super(key: key);
@@ -90,7 +103,7 @@ class WodStatefulWidget extends StatefulWidget {
 }
 
 class _WodStatefulWidgetState extends State<WodStatefulWidget> {
-  Model model = Model();
+
   List<bool> isRxSelected = [true, false];
   DateTime date = DateTime.now();
   int daysAgo = 0;
@@ -117,17 +130,18 @@ class _WodStatefulWidgetState extends State<WodStatefulWidget> {
           ),Card(
             child : Container(
               padding : EdgeInsets.all(20.0),
-              child : FutureBuilder<Map<String, dynamic>>(
+              child : FutureBuilder<WoD>(
                 future: fetch_wod(DateFormat('yyyy-MM-dd').format(date.subtract(new Duration(days: daysAgo)))),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     var data = snapshot.data;
-                    if (data.containsKey("description")) {
+                    model.wod = data;
+                    if (data.description != null) {
                       if (isRxSelected[0]) {
-                        return Text(snapshot.data['description']['rx'],
+                        return Text(data.description['rx'],
                             style: TextStyle(fontSize: 18.0));
                       } else {
-                        return Text(snapshot.data['description']['scale'],
+                        return Text(data.description['scale'],
                             style: TextStyle(fontSize: 18.0));
                       }
                     } else {
@@ -164,12 +178,9 @@ class AddScoreWidget extends StatefulWidget {
 
 class _ScoreWidgetState extends State<AddScoreWidget> {
   final _formKey = GlobalKey<FormState>();
-  Model model = Model();
-  ScaledWoD scaledWoD = ScaledWoD();
   String _selectedAthlete;
   Future<List<dynamic>> futureAthletes;
   String time = '12';
-  var WoD = [{"movement" : "pull ups", "reps" : 5, "weight_lbs" : 10}, {"movement" : "push ups", "reps" : 10}, {"movement" : "squats", "reps" : 15}];
 
   @override
   void initState() {
@@ -217,26 +228,8 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
                             // By default, s  how a loading spinner.
                             return CircularProgressIndicator();
                           }),*/
-                  amrapScoreForm(),
-                    /*Card(child : Container(
-                        height : 50,
-                        child : TextFormField(
-                          decoration: const InputDecoration(
-                            labelText: "Score",
-                            border: OutlineInputBorder()
-                          ),
-                          validator: (value) {
-                            if (value.isEmpty) {
-                              return 'Please enter some text';
-                            }
-                            return null;
-                          },
-                          onSaved: (String value) {
-                            model.score = value;
-                          }
-                        ))
-                      ),
-                  Card(child : TextFormField(
+                  Container(padding : EdgeInsets.all(20.0), child : amrapScoreForm()),
+                  /*Card(child : TextFormField(
                       decoration: const InputDecoration(
                         labelText: "Notes",
                         border: const OutlineInputBorder(
@@ -270,8 +263,7 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
                           if (_formKey.currentState.validate()) {
                             // Process data.
                             _formKey.currentState.save();
-                            print(WoD);
-                            put_score(WoD, model);
+                            put_score(model.updatedWod, model);
                             Navigator.of(context).push(
                                 MaterialPageRoute<void>(
                                 // NEW lines from here...
@@ -308,29 +300,37 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
     ));
   }
   Column amrapScoreForm() {
-    //var round = [{"movement" : "pull ups", "reps" : 5, "weight_lbs" : 10}, {"movement" : "push ups", "reps" : 10}, {"movement" : "squats", "reps" : 15}];
-    return Column(children : [
-      Row(children : [
-        scoreInputBox("", (String value) { model.score = value; }),
-        Expanded(child : Text('rounds in ' + time + ' mins of :', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
-      ])] +
-        WoD.map((dynamic mov) {
-        var children = [
-          scoreInputBox(mov['reps'].toString(), (String value) {
-            mov['reps'] = value;
+    WoD wod = model.wod;
+    model.updatedWod = model.wod;
+    String REPS_KEY = "n_reps";
+    String MOVEMENT_KEY = "mov";
+    String WEIGHT_KEY = "weight_m";
+    if (wod.round == null) {
+      return Column(children : [Container(padding : EdgeInsets.all(20.0),child : Text("All good :)", style : TextStyle(fontSize: 18)))]);
+    }
+    Row firstRow = Row(children : [
+      scoreInputBox("", (String value) { model.score = value; }),
+      Expanded(child : Text('rounds in ' + time + ' mins of :', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
+    ]);
+    List<Row> rows = model.updatedWod.round.map((Map<String, dynamic> mov) {
+      var children = [
+        scoreInputBox(mov[REPS_KEY].toString(), (String value) {
+          mov[REPS_KEY] = value;
+        }),
+        Text(mov[MOVEMENT_KEY], style : TextStyle(fontWeight: FontWeight.bold, fontSize: 18))
+      ];
+      if(mov[WEIGHT_KEY] != null) {
+        children = children + [
+          scoreInputBox(mov[WEIGHT_KEY].toString(), (String value) {
+            mov[WEIGHT_KEY] = value;
           }),
-          Text(mov['movement'], style : TextStyle(fontWeight: FontWeight.bold, fontSize: 18))
+          Text('lbs', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 18))
         ];
-        if(mov["weight_lbs"] != null) {
-          children = children + [
-            scoreInputBox(mov['weight_lbs'].toString(), (String value) {
-              mov['weight_lbs'] = value;
-            }),
-            Text('lbs', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 18))
-          ];
-        }
-        return Row(children : children);}).toList()
-    );
+      }
+      return Row(children : children);
+    }).toList();
+
+    return Column(children : [firstRow] + rows);
   }
 
   List<dynamic> getAthleteNames(athletes) {
@@ -430,24 +430,7 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
       MaterialPageRoute<void>(
         // NEW lines from here...
         builder: (BuildContext context) {
-          return Scaffold(
-            appBar: AppBar(
-              title: appTitle,
-            ),
-            body: Center(
-                child : Container(
-                  padding : EdgeInsets.symmetric(vertical : verticalPadding),
-                 child : SizedBox(
-                  width : mainWidth,
-                  child : Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children : [
-                      WodStatefulWidget(),
-                      AddScoreWidget()
-                    ]
-                )
-            )),
-          ));
+          return scorePage;
         }, // ...to here.
       ),
     );

@@ -9,16 +9,28 @@ class WoD {
   final List<Map<String, dynamic>> round;
   final String type;
   final int time;
+  final String name;
 
-  WoD({this.description, this.round, this.type, this.time});
+  WoD({this.description, this.round, this.type, this.time, this.name});
 
   factory WoD.fromJson(Map<String, dynamic> json) {
     return WoD(
-        description: json['description'],
-        round: json['round'],
+        description: Map<String, String>.from(json['description']),
+        round: List<Map<String, dynamic>>.from(json['round']),
         type: json['type'],
-        time: json['time']
+        time: json['time'],
+        name: json['name']
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "description" : description,
+      "round" : round,
+      "type" : type,
+      "time" : time,
+      "name" : name
+    };
   }
 }
 
@@ -44,7 +56,7 @@ class Score {
   }
 }
 
-Future<Map<String, dynamic>> fetch_wod(date) async {
+Future<WoD> fetch_wod(date) async {
   print('Fetching wod for date ${date}');
   final response = await http.get('http://127.0.0.1:5000/wod?date=$date');
   //print(response.body);
@@ -52,9 +64,8 @@ Future<Map<String, dynamic>> fetch_wod(date) async {
     // If the server did return a 200 OK response,
     // then parse the JSON.
     var myjson = json.decode(response.body) as Map<String, dynamic>;
-    //var whatev = WoD.fromJson(myjson);
-    //print(whatev);
-    return myjson;
+    var wod = WoD.fromJson(myjson);
+    return wod;
   } else {
     // If the server did not return a 200 OK response,
     // then throw an exception.
@@ -65,13 +76,11 @@ Future<Map<String, dynamic>> fetch_wod(date) async {
 Future<List<dynamic>> fetch_athletes() async {
   print('Fetching athletes');
   final response = await http.get('http://127.0.0.1:5000/athletes');
-  //print(response.body);
   if (response.statusCode == 200) {
     // If the server did return a 200 OK response,
     // then parse the JSON.
     var myjson = json.decode(response.body) as List<dynamic>;
     //var whatev = WoD.fromJson(myjson);
-    //print(whatev);
     return myjson;
   } else {
     // If the server did not return a 200 OK response,
@@ -83,7 +92,6 @@ Future<List<dynamic>> fetch_athletes() async {
 Future<List<Score>> fetch_scores() async {
   print('Fetching scores');
   final response = await http.get('http://127.0.0.1:5000/scores');
-  print(response.body);
   if (response.statusCode == 200) {
     // If the server did return a 200 OK response,
     // then parse the JSON.
@@ -110,8 +118,8 @@ Future<http.Response> put_data(Map<String, dynamic> body) async {
   );
 }
 
-Future<void> put_score(dynamic wod, Model data) async {
-  final http.Response response = await put_data({'wod_id': 123, 'cid': 3, 'wod' : wod, 'score': data.score, 'notes': data.notes});
+Future<void> put_score(WoD wod, Model data) async {
+  final http.Response response = await put_data({'wod_id': 123, 'cid': 3, 'wod' : wod.toJson(), 'score': data.score, 'notes': data.notes});
   if (response.statusCode == 201) {
     // If the server did return a 201 CREATED response,
     // then parse the JSON.
