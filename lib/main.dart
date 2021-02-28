@@ -31,7 +31,7 @@ MaterialApp homePage = MaterialApp(
     appBar: AppBar(
       title: appTitle,
     ),
-    body: Center(child : Container(
+    body: SingleChildScrollView(child: Center(child : Container(
       padding : EdgeInsets.symmetric(vertical : verticalPadding),
       child : SizedBox(
       width : mainWidth,
@@ -43,13 +43,13 @@ MaterialApp homePage = MaterialApp(
           ]
       ))
     )),
-));
+)));
 
 Scaffold scorePage = Scaffold(
     appBar: AppBar(
       title: appTitle,
     ),
-    body: Center(
+    body: SingleChildScrollView(child : Center(
       child : Container(
           padding : EdgeInsets.symmetric(vertical : verticalPadding),
           child : SizedBox(
@@ -57,12 +57,11 @@ Scaffold scorePage = Scaffold(
               child : Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children : [
-                    WodStatefulWidget(),
                     AddScoreWidget()
                   ]
               )
           )),
-    ));
+    )));
 
 class _MyAppState extends State<MyApp> {
 
@@ -115,7 +114,7 @@ class _WodStatefulWidgetState extends State<WodStatefulWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Flexible(child : Column(
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
@@ -158,7 +157,7 @@ class _WodStatefulWidgetState extends State<WodStatefulWidget> {
               )
         ))
       ]
-    ));
+    );
   }
 
   void _subtractDate () {
@@ -358,8 +357,7 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Flexible(
-        child : Column(
+    return Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.start,
             children : [
@@ -405,14 +403,13 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
                     context: context,
                     tiles: tiles,
                   ).toList();
-                  return Flexible(child :
-                  Column(children : [
-                    Expanded(child : ListView(children : divided, shrinkWrap: true)),
+                  return Column(children : [
+                    ListView(children : divided, shrinkWrap: true),
                       Padding(
                           padding: const EdgeInsets.all(10.0),
                           child : IconButton(icon: Icon(CupertinoIcons.plus_circle), onPressed: _pushSaved)
                       )]
-                  ));
+                  );
                 } else if (snapshot.hasError) {
                   return Text("${snapshot.error}");
                 }
@@ -422,7 +419,7 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
               }
               )
             ]
-        )
+
     );
   }
   void _pushSaved() {
