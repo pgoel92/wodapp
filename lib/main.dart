@@ -93,6 +93,7 @@ class Model {
 }
 
 Model model = Model();
+TextStyle globalTextStyle = TextStyle(fontSize: 18);
 
 class WodStatefulWidget extends StatefulWidget {
   WodStatefulWidget({Key key}) : super(key: key);
@@ -138,13 +139,13 @@ class _WodStatefulWidgetState extends State<WodStatefulWidget> {
                     if (data.description != null) {
                       if (isRxSelected[0]) {
                         return Text(data.description['rx'],
-                            style: TextStyle(fontSize: 18.0));
+                            style: globalTextStyle);
                       } else {
                         return Text(data.description['scale'],
-                            style: TextStyle(fontSize: 18.0));
+                            style: globalTextStyle);
                       }
                     } else {
-                      return Text("Rest day", style: TextStyle(fontSize: 18.0));
+                      return Text("Rest day", style: globalTextStyle);
                     }
                   } else if (snapshot.hasError) {
                     return Text("${snapshot.error}");
@@ -227,7 +228,7 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
                             // By default, s  how a loading spinner.
                             return CircularProgressIndicator();
                           }),*/
-                  Container(padding : EdgeInsets.all(20.0), child : amrapScoreForm()),
+                  Container(padding : EdgeInsets.all(10.0), child : amrapScoreForm()),
                   /*Card(child : TextFormField(
                       decoration: const InputDecoration(
                         labelText: "Notes",
@@ -283,8 +284,8 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
     ))]);
   }
 
-  SizedBox scoreInputBox(String initialValue, FormFieldSetter<String> onSaved) {
-    return SizedBox(width : 40, child : Card(child : Container(
+  SizedBox scoreInputBox(String initialValue, FormFieldSetter<String> onSaved, {double width = 40}) {
+    return SizedBox(width : width, child : Card(child : Container(
         height : 40,
         child : TextFormField(
             initialValue : initialValue,
@@ -305,25 +306,25 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
     String MOVEMENT_KEY = "mov";
     String WEIGHT_KEY = "weight_m";
     if (wod.round == null) {
-      return Column(children : [Container(padding : EdgeInsets.all(20.0),child : Text("All good :)", style : TextStyle(fontSize: 18)))]);
+      return Column(children : [Container(padding : EdgeInsets.all(20.0),child : Text("All good :)", style : globalTextStyle))]);
     }
     Row firstRow = Row(children : [
-      scoreInputBox("", (String value) { model.score = value; }),
-      Expanded(child : Text('rounds in ' + time + ' mins of :', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
+      scoreInputBox("", (String value) { model.score = value; }, width:60),
+      Expanded(child : Text('rounds in ' + time + ' mins of :', style : globalTextStyle)),
     ]);
     List<Row> rows = model.updatedWod.round.map((Map<String, dynamic> mov) {
       var children = [
         scoreInputBox(mov[REPS_KEY].toString(), (String value) {
           mov[REPS_KEY] = value;
         }),
-        Text(mov[MOVEMENT_KEY], style : TextStyle(fontWeight: FontWeight.bold, fontSize: 18))
+        Text(mov[MOVEMENT_KEY], style : globalTextStyle)
       ];
       if(mov[WEIGHT_KEY] != null) {
         children = children + [
           scoreInputBox(mov[WEIGHT_KEY].toString(), (String value) {
             mov[WEIGHT_KEY] = value;
           }),
-          Text('lbs', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 18))
+          Text('lbs', style : globalTextStyle)
         ];
       }
       return Row(children : children);
@@ -378,21 +379,21 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
                               padding : EdgeInsets.symmetric(horizontal: 5),
                               child : Text(
                               score.cname??'',
-                              style: TextStyle(fontSize: 18.0),
+                              style: globalTextStyle,
                             )),
                           Container(
                               width : 150,
                           padding : EdgeInsets.symmetric(horizontal: 5),
                           child : Text(
                               score.score,
-                              style: TextStyle(fontSize: 18.0),
+                              style: globalTextStyle,
                             )),
                             Container(
                                 width : 150,
                             padding : EdgeInsets.symmetric(horizontal: 5),
                           child : Text(
                               score.notes??'',
-                              style: TextStyle(fontSize: 18.0),
+                              style: globalTextStyle,
                             ))
                           ]
                         ),
