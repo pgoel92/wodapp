@@ -71,9 +71,9 @@ class _MyAppState extends State<MyApp> {
                               padding : EdgeInsets.all(10.0),
                               child : Row(
                                   children : [
-                                    IconButton(icon: Icon(IconData(0xe5a8, fontFamily: 'MaterialIcons', matchTextDirection: true)), onPressed: _subtractDate),
-                                    Text(DateFormat.yMMMMEEEEd().format(date.subtract(new Duration(days: daysAgo))), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25.0)),
-                                    IconButton(icon: Icon(IconData(0xe5b0, fontFamily: 'MaterialIcons', matchTextDirection: true)), onPressed: _addDate)
+                                    Expanded(child : IconButton(icon: Icon(IconData(0xe5a8, fontFamily: 'MaterialIcons', matchTextDirection: true)), onPressed: _subtractDate)),
+                                    Text(DateFormat.yMMMMEEEEd().format(date.subtract(new Duration(days: daysAgo))), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22.0)),
+                                    Expanded(child : IconButton(icon: Icon(IconData(0xe5b0, fontFamily: 'MaterialIcons', matchTextDirection: true)), onPressed: _addDate))
                                   ]
                               )
                           ),
@@ -378,27 +378,27 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
                         title: Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children : [
-                            Container(
+                            Expanded(child : Container(
                               width : 150,
                               padding : EdgeInsets.symmetric(horizontal: 5),
                               child : Text(
                               score.first_name??'',
                               style: globalTextStyle,
-                            )),
-                          Container(
+                            ))),
+                          Expanded(child : Container(
                               width : 150,
                           padding : EdgeInsets.symmetric(horizontal: 5),
                           child : Text(
                               score.score,
                               style: globalTextStyle,
-                            )),
-                            Container(
+                            ))),
+                            Expanded(child : Container(
                                 width : 150,
                             padding : EdgeInsets.symmetric(horizontal: 5),
                           child : Text(
                               score.notes??'',
                               style: globalTextStyle,
-                            ))
+                            )))
                           ]
                         ),
                       ));

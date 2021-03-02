@@ -108,7 +108,6 @@ Future<List<Score>> fetch_scores(date) async {
       for (var i = 0; i < scores_json.length; i++) {
         scores.add(Score.fromJson(scores_json[i]));
       }
-      print(scores);
       return scores;
     } else {
       // If the server did not return a 200 OK response,
