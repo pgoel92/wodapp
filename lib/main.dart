@@ -8,6 +8,13 @@ import './src/pages/data.dart';
 Text appTitle = Text('Workout of the Day',  style : TextStyle(fontWeight: FontWeight.bold, fontSize: 25));
 double verticalPadding = 50.0;
 double mainWidth = 1000.0;
+DateTime date = DateTime.now();
+int daysAgo = 0;
+MaterialApp homePage;
+
+String getDisplayDate() {
+  return DateFormat('yyyy-MM-dd').format(date.subtract(new Duration(days: daysAgo)));
+}
 
 void main() {
   runApp(MyApp());
@@ -17,33 +24,6 @@ class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => _MyAppState();
 }
-
-MaterialApp homePage = MaterialApp(
-    title: 'Workout of the Day',
-    //theme: ThemeData(          // Add the 3 lines from here...
-    //  primaryColor: Colors.white,
-    //),
-  darkTheme: ThemeData(
-    brightness: Brightness.dark,
-    /* dark theme settings */
-  ),
-  home: Scaffold(
-    appBar: AppBar(
-      title: appTitle,
-    ),
-    body: SingleChildScrollView(child: Center(child : Container(
-      padding : EdgeInsets.symmetric(vertical : verticalPadding),
-      child : SizedBox(
-      width : mainWidth,
-      child : Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children : [
-            WodStatefulWidget(),
-            ListScoresWidget()
-          ]
-      ))
-    )),
-)));
 
 Scaffold scorePage = Scaffold(
     appBar: AppBar(
@@ -67,7 +47,50 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    homePage = MaterialApp(
+        title: 'Workout of the Day',
+        //theme: ThemeData(          // Add the 3 lines from here...
+        //  primaryColor: Colors.white,
+        //),
+        darkTheme: ThemeData(
+          brightness: Brightness.dark,
+          /* dark theme settings */
+        ),
+        home: Scaffold(
+            appBar: AppBar(
+              title: appTitle,
+            ),
+            body: SingleChildScrollView(child: Center(child : Container(
+                padding : EdgeInsets.symmetric(vertical : verticalPadding),
+                child : SizedBox(
+                    width : mainWidth,
+                    child : Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children : [
+                          Padding(
+                              padding : EdgeInsets.all(10.0),
+                              child : Row(
+                                  children : [
+                                    IconButton(icon: Icon(IconData(0xe5a8, fontFamily: 'MaterialIcons', matchTextDirection: true)), onPressed: _subtractDate),
+                                    Text(DateFormat.yMMMMEEEEd().format(date.subtract(new Duration(days: daysAgo))), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25.0)),
+                                    IconButton(icon: Icon(IconData(0xe5b0, fontFamily: 'MaterialIcons', matchTextDirection: true)), onPressed: _addDate)
+                                  ]
+                              )
+                          ),
+                          WodStatefulWidget(),
+                          ListScoresWidget()
+                        ]
+                    ))
+            )),
+            )));
     return homePage;
+  }
+
+  void _subtractDate () {
+    setState(() { daysAgo = daysAgo + 1; });
+  }
+  void _addDate () {
+    setState(() { daysAgo = daysAgo - 1; });
   }
 }
 
@@ -105,8 +128,6 @@ class WodStatefulWidget extends StatefulWidget {
 class _WodStatefulWidgetState extends State<WodStatefulWidget> {
 
   List<bool> isRxSelected = [true, false];
-  DateTime date = DateTime.now();
-  int daysAgo = 0;
 
   @override
   void initState() {
@@ -118,23 +139,15 @@ class _WodStatefulWidgetState extends State<WodStatefulWidget> {
     return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding : EdgeInsets.all(10.0),
-            child : Row(
-              children : [
-                IconButton(icon: Icon(IconData(0xe5a8, fontFamily: 'MaterialIcons', matchTextDirection: true)), onPressed: _subtractDate),
-                Text(DateFormat.yMMMMEEEEd().format(date.subtract(new Duration(days: daysAgo))), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25.0)),
-                IconButton(icon: Icon(IconData(0xe5b0, fontFamily: 'MaterialIcons', matchTextDirection: true)), onPressed: _addDate)
-              ]
-            )
-          ),Card(
+          Card(
             child : Container(
               padding : EdgeInsets.all(20.0),
               child : FutureBuilder<WoD>(
-                future: fetch_wod(DateFormat('yyyy-MM-dd').format(date.subtract(new Duration(days: daysAgo)))),
+                future: fetch_wod(getDisplayDate()),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     var data = snapshot.data;
+                    print(data);
                     model.wod = data;
                     if (data.description != null) {
                       if (isRxSelected[0]) {
@@ -159,13 +172,6 @@ class _WodStatefulWidgetState extends State<WodStatefulWidget> {
         ))
       ]
     );
-  }
-
-  void _subtractDate () {
-    setState(() { daysAgo = daysAgo + 1; });
-  }
-  void _addDate () {
-    setState(() { daysAgo = daysAgo - 1; });
   }
 }
 
@@ -305,12 +311,12 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
     String REPS_KEY = "n_reps";
     String MOVEMENT_KEY = "mov";
     String WEIGHT_KEY = "weight_m";
-    if (wod.round == null) {
+    if (wod.round == null || wod.round.isEmpty) {
       return Column(children : [Container(padding : EdgeInsets.all(20.0),child : Text("All good :)", style : globalTextStyle))]);
     }
     Row firstRow = Row(children : [
       scoreInputBox("", (String value) { model.score = value; }, width:60),
-      Expanded(child : Text('rounds in ' + time + ' mins of :', style : globalTextStyle)),
+      Expanded(child : Text('rounds in ' + wod.time.toString() + ' mins of :', style : globalTextStyle)),
     ]);
     List<Row> rows = model.updatedWod.round.map((Map<String, dynamic> mov) {
       var children = [
@@ -348,12 +354,10 @@ class ListScoresWidget extends StatefulWidget {
 class _ListScoresWidgetState extends State<ListScoresWidget> {
   final _formKey = GlobalKey<FormState>();
   Model model = Model();
-  Future<List<Score>> futureScores;
 
   @override
   void initState() {
     super.initState();
-    futureScores = fetch_scores();
   }
 
   @override
@@ -364,7 +368,7 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
             children : [
               Container(padding : EdgeInsets.all(10),child : Text('Scores', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 25))),
               FutureBuilder<List<Score>>(
-              future: futureScores,
+              future: fetch_scores(getDisplayDate()),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   final tiles = snapshot.data.map(
@@ -378,7 +382,7 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
                               width : 150,
                               padding : EdgeInsets.symmetric(horizontal: 5),
                               child : Text(
-                              score.cname??'',
+                              score.first_name??'',
                               style: globalTextStyle,
                             )),
                           Container(
