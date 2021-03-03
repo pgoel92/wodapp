@@ -96,17 +96,17 @@ class _MyAppState extends State<MyApp> {
 
 
 class Model {
-  WoD wod;
-  WoD updatedWod;
-  String name;
+  Program wod;
+  Program updatedWod;
+  int athlete_id;
   String score;
   String notes;
 
-  Model({this.name, this.score, this.notes, this.wod, this.updatedWod});
+  Model({this.athlete_id, this.score, this.notes, this.wod, this.updatedWod});
 
   Map<String, String> toJson() {
     return {
-      'name': name,
+      'athlete_id': athlete_id.toString(),
       'score': score,
       'notes' : notes,
       'wod' : wod.toString(),
@@ -142,21 +142,15 @@ class _WodStatefulWidgetState extends State<WodStatefulWidget> {
           Card(
             child : Container(
               padding : EdgeInsets.all(20.0),
-              child : FutureBuilder<WoD>(
+              child : FutureBuilder<Program>(
                 future: fetch_wod(getDisplayDate()),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     var data = snapshot.data;
-                    print(data);
                     model.wod = data;
-                    if (data.description != null) {
-                      if (isRxSelected[0]) {
-                        return Text(data.description['rx'],
+                    if (data.workout.description != null) {
+                        return Text(data.workout.description['rx'],
                             style: globalTextStyle);
-                      } else {
-                        return Text(data.description['scale'],
-                            style: globalTextStyle);
-                      }
                     } else {
                       return Text("Rest day", style: globalTextStyle);
                     }
@@ -184,7 +178,7 @@ class AddScoreWidget extends StatefulWidget {
 
 class _ScoreWidgetState extends State<AddScoreWidget> {
   final _formKey = GlobalKey<FormState>();
-  String _selectedAthlete;
+  int _selectedAthlete;
   Future<List<dynamic>> futureAthletes;
   String time = '12';
 
@@ -196,44 +190,45 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Form(
+        key: _formKey,
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children : [
       Container(padding : EdgeInsets.all(10),child : Text('Add Score', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 25))),
-      Card(child : Column(mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children : [Form(
-              key: _formKey,
-              child: Column(
+          FutureBuilder<List<dynamic>>(
+              future: futureAthletes,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  return Card(child : new DropdownButtonFormField<int>(
+                      value : _selectedAthlete,
+                      items: snapshot.data.map((dynamic value) {
+                        print(value);
+                        String name = value['first_name'] + " " + value['last_name'];
+                        return new DropdownMenuItem<int>(
+                          value: value['athlete_id'],
+                          child: Padding(padding : EdgeInsets.only(left : 10.0), child : Text(name)),
+                        );
+                      }).toList(),
+                      onChanged: (newValue) {
+                        setState(() {_selectedAthlete = newValue;});
+                      },
+                      onSaved: (int value) {
+                        model.athlete_id = value;
+                      }
+                  )
+                  );
+                } else if (snapshot.hasError) {
+                  return Text("${snapshot.error}");
+                }
+
+                // By default, s  how a loading spinner.
+                return CircularProgressIndicator();
+              }),
+      Card(child : Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                        /*FutureBuilder<List<dynamic>>(
-                          future: futureAthletes,
-                          builder: (context, snapshot) {
-                            if (snapshot.hasData) {
-                              return Card(child : new DropdownButtonFormField<String>(
-                                  value : _selectedAthlete,
-                                  items: getAthleteNames(snapshot.data).map((dynamic value) {
-                                    return new DropdownMenuItem<String>(
-                                    value: value,
-                                    child: new Text(value),
-                                    );
-                                  }).toList(),
-                                  onChanged: (newValue) {
-                                    setState(() {_selectedAthlete = newValue;});
-                                    },
-                                  onSaved: (String value) {
-                                    model.name = value;
-                                  }
-                                )
-                              );
-                            } else if (snapshot.hasError) {
-                              return Text("${snapshot.error}");
-                            }
-
-                            // By default, s  how a loading spinner.
-                            return CircularProgressIndicator();
-                          }),*/
                   Container(padding : EdgeInsets.all(10.0), child : amrapScoreForm()),
                   /*Card(child : TextFormField(
                       decoration: const InputDecoration(
@@ -269,7 +264,7 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
                           if (_formKey.currentState.validate()) {
                             // Process data.
                             _formKey.currentState.save();
-                            put_score(model.updatedWod, model);
+                            put_score(model);
                             Navigator.of(context).push(
                                 MaterialPageRoute<void>(
                                 // NEW lines from here...
@@ -285,9 +280,8 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
                           ),)
                       ))),
                 ],
-              )
-        )]
-    ))]);
+        ))
+    ]));
   }
 
   SizedBox scoreInputBox(String initialValue, FormFieldSetter<String> onSaved, {double width = 40}) {
@@ -306,19 +300,19 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
     ));
   }
   Column amrapScoreForm() {
-    WoD wod = model.wod;
+    Program wod = model.wod;
     model.updatedWod = model.wod;
     String REPS_KEY = "n_reps";
     String MOVEMENT_KEY = "mov";
     String WEIGHT_KEY = "weight_m";
-    if (wod.round == null || wod.round.isEmpty) {
+    if (wod.workout.round == null || wod.workout.round.isEmpty) {
       return Column(children : [Container(padding : EdgeInsets.all(20.0),child : Text("All good :)", style : globalTextStyle))]);
     }
     Row firstRow = Row(children : [
       scoreInputBox("", (String value) { model.score = value; }, width:60),
-      Expanded(child : Text('rounds in ' + wod.time.toString() + ' mins of :', style : globalTextStyle)),
+      Expanded(child : Text('rounds in ' + wod.workout.time.toString() + ' mins of :', style : globalTextStyle)),
     ]);
-    List<Row> rows = model.updatedWod.round.map((Map<String, dynamic> mov) {
+    List<Row> rows = model.updatedWod.workout.round.map((Map<String, dynamic> mov) {
       var children = [
         scoreInputBox(mov[REPS_KEY].toString(), (String value) {
           mov[REPS_KEY] = value;
@@ -439,4 +433,3 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
   }
 
 }
-

@@ -4,17 +4,40 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
 
-class WoD {
-  final Map<String, String> description;
+class Program {
+  final int id;
+  final Workout workout;
+
+  Program({this.id, this.workout});
+
+  factory Program.fromJson(Map<String, dynamic> json) {
+    return Program(
+        id: json['id'] ?? -1,
+        workout: Workout.fromJson(json['workout'] ?? {})
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "id" : id,
+      "workout" : workout.toJson()
+    };
+  }
+}
+
+class Workout {
+  final int id;
+  final Map<String, dynamic> description;
   final List<Map<String, dynamic>> round;
   final String type;
   final int time;
   final String name;
 
-  WoD({this.description, this.round, this.type, this.time, this.name});
+  Workout({this.id, this.description, this.round, this.type, this.time, this.name});
 
-  factory WoD.fromJson(Map<String, dynamic> json) {
-    return WoD(
+  factory Workout.fromJson(Map<String, dynamic> json) {
+    return Workout(
+        id: json['id'] ?? -1,
         description: Map<String, String>.from(json['description'] ?? {'rx' :'Nothing to see here'}),
         round: List<Map<String, dynamic>>.from(json['round'] ?? []),
         type: json['type'],
@@ -25,6 +48,7 @@ class WoD {
 
   Map<String, dynamic> toJson() {
     return {
+      "id" : id,
       "description" : description,
       "round" : round,
       "type" : type,
@@ -33,6 +57,7 @@ class WoD {
     };
   }
 }
+
 
 class Score {
   final int cid;
@@ -56,7 +81,7 @@ class Score {
   }
 }
 
-Future<WoD> fetch_wod(date) async {
+Future<Program> fetch_wod(date) async {
   print('Fetching wod for date ${date}');
   try {
     final response = await http.get('http://127.0.0.1:5000/wod?date=$date');
@@ -64,7 +89,7 @@ Future<WoD> fetch_wod(date) async {
       // If the server did return a 200 OK response,
       // then parse the JSON.
       var myjson = json.decode(response.body) as Map<String, dynamic>;
-      var wod = WoD.fromJson(myjson);
+      var wod = Program.fromJson(myjson);
       return wod;
     } else {
       // If the server did not return a 200 OK response,
@@ -72,7 +97,7 @@ Future<WoD> fetch_wod(date) async {
       throw Exception('Failed to load wod');
     }
   } on Exception {
-    return WoD.fromJson({});
+    return Program.fromJson({});
   }
 }
 
@@ -129,8 +154,8 @@ Future<http.Response> put_data(Map<String, dynamic> body) async {
   );
 }
 
-Future<void> put_score(WoD wod, Model data) async {
-  final http.Response response = await put_data({'program_id': 4, 'athlete_id': 3, 'scaled_wod' : wod.toJson(), 'score': data.score, 'notes': data.notes});
+Future<void> put_score(Model data) async {
+  final http.Response response = await put_data({'program_id': data.wod.id, 'athlete_id': data.athlete_id, 'scaled_wod' : data.updatedWod.workout.toJson(), 'score': data.score, 'notes': data.notes});
   if (response.statusCode == 201) {
     // If the server did return a 201 CREATED response,
     // then parse the JSON.
