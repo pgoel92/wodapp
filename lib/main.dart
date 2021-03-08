@@ -308,10 +308,7 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
     if (wod.workout.round == null || wod.workout.round.isEmpty) {
       return Column(children : [Container(padding : EdgeInsets.all(20.0),child : Text("All good :)", style : globalTextStyle))]);
     }
-    Row firstRow = Row(children : [
-      scoreInputBox("", (String value) { model.score = value; }, width:60),
-      Expanded(child : Text('rounds in ' + wod.workout.time.toString() + ' mins of :', style : globalTextStyle)),
-    ]);
+    Row firstRow = wod.workout.scoreInputRow(model);
     List<Row> rows = model.updatedWod.workout.round.map((Map<String, dynamic> mov) {
       var children = [
         scoreInputBox(mov[REPS_KEY].toString(), (String value) {

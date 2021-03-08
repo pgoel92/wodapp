@@ -3,6 +3,8 @@ import 'package:path/path.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'workout.dart';
 
 class Program {
   final int id;
@@ -24,40 +26,6 @@ class Program {
     };
   }
 }
-
-class Workout {
-  final int id;
-  final Map<String, dynamic> description;
-  final List<Map<String, dynamic>> round;
-  final String type;
-  final int time;
-  final String name;
-
-  Workout({this.id, this.description, this.round, this.type, this.time, this.name});
-
-  factory Workout.fromJson(Map<String, dynamic> json) {
-    return Workout(
-        id: json['id'] ?? -1,
-        description: Map<String, String>.from(json['description'] ?? {'rx' :'Nothing to see here'}),
-        round: List<Map<String, dynamic>>.from(json['round'] ?? []),
-        type: json['type'],
-        time: json['time'],
-        name: json['name']
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      "id" : id,
-      "description" : description,
-      "round" : round,
-      "type" : type,
-      "time" : time,
-      "name" : name
-    };
-  }
-}
-
 
 class Score {
   final int cid;
