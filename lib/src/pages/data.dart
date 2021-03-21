@@ -32,7 +32,7 @@ class Score {
   final String first_name;
   final String last_name;
   final bool is_rx;
-  final String score;
+  final dynamic score;
   final String notes;
 
   Score({this.cid, this.first_name, this.last_name, this.is_rx, this.score, this.notes});

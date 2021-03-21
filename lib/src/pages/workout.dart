@@ -35,13 +35,13 @@ class Workout {
     };
   }
 
-  Row scoreInputRow(Model model) {
-    return Row(children : []);
+  Column scoreInputColumn(Model model) {
+    return Column(children : []);
   }
 }
 
-SizedBox scoreInputBox(String initialValue, FormFieldSetter<String> onSaved, {double width = 40}) {
-  return SizedBox(width : width, child : Card(child : Container(
+Expanded scoreInputBox(String initialValue, FormFieldSetter<String> onSaved, String hint, {double width = 40}) {
+  return Expanded(child : Card(child : Container(
       height : 40,
       child : TextFormField(
           initialValue : initialValue,
@@ -51,7 +51,12 @@ SizedBox scoreInputBox(String initialValue, FormFieldSetter<String> onSaved, {do
             }
             return null;
           },
-          onSaved: onSaved
+          onSaved: onSaved,
+          decoration: new InputDecoration(
+              border: InputBorder.none,
+              contentPadding:
+              EdgeInsets.only(left: 15, bottom: 11, top: 11, right: 15),
+              hintText: hint),
       ))
   ));
 }
@@ -90,11 +95,11 @@ class AMRAPWorkout extends Workout{
     };
   }
 
-  Row scoreInputRow(Model model) {
-    return Row(children : [
-      scoreInputBox("", (String value) { model.score = value; }, width:60),
+  Column scoreInputColumn(Model model) {
+    return Column(children : [Row(children : [
+      scoreInputBox("", (String value) { model.score = value; }, "rounds", width:60),
       Expanded(child : Text('rounds in ' + this.time.toString() + ' mins of :', style : globalTextStyle)),
-    ]);
+    ])]);
   }
 }
 
@@ -133,12 +138,28 @@ class ForTimeWorkout extends Workout {
     };
   }
 
-  Row scoreInputRow(Model model) {
-    return Row(children : [
-      Expanded(child : Text(this.n_rounds.toString() + ' rounds in ', style : globalTextStyle)),
-      scoreInputBox("", (String value) { model.score = value; }, width:60),
-      Expanded(child : Text(' mins of :', style : globalTextStyle))
-    ]);
+  Column scoreInputColumn(Model model, {bool timeCap = false}) {
+    if (timeCap) {
+      return Column(children : [Row(children : [
+      scoreInputBox("", (String value) { if (model.score == null) {
+        model.score = {'mins' : int.parse(value)}; } else {model.score['mins'] = int.parse(value);}}, "minutes", width:60),
+      Text(' : ', style : globalTextStyle),
+      scoreInputBox("", (String value) { if (model.score == null) {
+        model.score = {'seconds' : int.parse(value)}; } else {model.score['seconds'] = int.parse(value);}}, "seconds", width:60)
+    ])]);
+    } else {
+    return Column(children : [Row(children : [
+      scoreInputBox("", (String value) { if (model.score == null) {
+        model.score = {'rounds' : int.parse(value)}; } else {model.score['rounds'] = int.parse(value);}}, "rounds", width:60),
+      Text(' + ', style : globalTextStyle),
+      scoreInputBox("", (String value) { if (model.score == null) {
+        model.score = {'reps' : int.parse(value)}; } else {model.score['reps'] = int.parse(value);}}, "reps", width:60)
+    ])]);
+    }
+  }
+
+  String parseScore() {
+    
   }
 }
 
@@ -173,10 +194,13 @@ class TwentyOne_Fifteen_Nine extends Workout {
     };
   }
 
-  Row scoreInputRow(Model model) {
-    return Row(children : [
-      scoreInputBox("", (String value) { model.score = value; }, width:60),
-      Expanded(child : Text(' mins for :', style : globalTextStyle))
-    ]);
+  Column scoreInputColumn(Model model) {
+    return Column(children : [Row(children : [
+      scoreInputBox("", (String value) { if (model.score == null) {
+        model.score = {'mins' : int.parse(value)}; } else {model.score['mins'] = int.parse(value);}}, "minutes", width:60),
+      Expanded(child : Text(' : ', style : globalTextStyle)),
+      scoreInputBox("", (String value) { if (model.score == null) {
+        model.score = {'seconds' : int.parse(value)}; } else {model.score['seconds'] = int.parse(value);}}, "seconds", width:60)
+    ])]);
   }
 }

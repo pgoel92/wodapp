@@ -99,7 +99,7 @@ class Model {
   Program wod;
   Program updatedWod;
   int athlete_id;
-  String score;
+  dynamic score;
   String notes;
 
   Model({this.athlete_id, this.score, this.notes, this.wod, this.updatedWod});
@@ -215,7 +215,16 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
                       },
                       onSaved: (int value) {
                         model.athlete_id = value;
-                      }
+                      },
+                      decoration: new InputDecoration(
+                          border: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          errorBorder: InputBorder.none,
+                          disabledBorder: InputBorder.none,
+                          contentPadding:
+                          EdgeInsets.only(left: 15, bottom: 11, top: 11, right: 15),
+                          hintText: "Athlete")
                   )
                   );
                 } else if (snapshot.hasError) {
@@ -225,11 +234,12 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
                 // By default, s  how a loading spinner.
                 return CircularProgressIndicator();
               }),
+      scoreForm(),
       Card(child : Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Container(padding : EdgeInsets.all(10.0), child : amrapScoreForm()),
+                  Container(padding : EdgeInsets.all(10.0), child : workoutForm()),
                   /*Card(child : TextFormField(
                       decoration: const InputDecoration(
                         labelText: "Notes",
@@ -284,9 +294,10 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
     ]));
   }
 
-  SizedBox scoreInputBox(String initialValue, FormFieldSetter<String> onSaved, {double width = 40}) {
-    return SizedBox(width : width, child : Card(child : Container(
-        height : 40,
+  SizedBox workoutInputBox(String initialValue, FormFieldSetter<String> onSaved, {double width = 40}) {
+    return SizedBox(width : width, child : Card(
+        color: Colors.black12,
+        child : Container(
         child : TextFormField(
             initialValue : initialValue,
             validator: (value) {
@@ -295,11 +306,25 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
               }
               return null;
             },
-            onSaved: onSaved
+            onSaved: onSaved,
+            decoration: new InputDecoration(
+                border: InputBorder.none
+                )
         ))
     ));
   }
-  Column amrapScoreForm() {
+
+  Column scoreForm() {
+    Program wod = model.wod;
+    model.updatedWod = model.wod;
+    if (wod.workout.round == null || wod.workout.round.isEmpty) {
+      return Column(children : [Container(padding : EdgeInsets.all(20.0),child : Text("All good :)", style : globalTextStyle))]);
+    }
+
+    return wod.workout.scoreInputColumn(model);
+  }
+
+  Column workoutForm() {
     Program wod = model.wod;
     model.updatedWod = model.wod;
     String REPS_KEY = "n_reps";
@@ -308,17 +333,16 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
     if (wod.workout.round == null || wod.workout.round.isEmpty) {
       return Column(children : [Container(padding : EdgeInsets.all(20.0),child : Text("All good :)", style : globalTextStyle))]);
     }
-    Row firstRow = wod.workout.scoreInputRow(model);
     List<Row> rows = model.updatedWod.workout.round.map((Map<String, dynamic> mov) {
       var children = [
-        scoreInputBox(mov[REPS_KEY].toString(), (String value) {
+        workoutInputBox(mov[REPS_KEY].toString(), (String value) {
           mov[REPS_KEY] = value;
         }),
         Text(mov[MOVEMENT_KEY], style : globalTextStyle)
       ];
       if(mov[WEIGHT_KEY] != null) {
         children = children + [
-          scoreInputBox(mov[WEIGHT_KEY].toString(), (String value) {
+          workoutInputBox(mov[WEIGHT_KEY].toString(), (String value) {
             mov[WEIGHT_KEY] = value;
           }),
           Text('lbs', style : globalTextStyle)
@@ -327,7 +351,7 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
       return Row(children : children);
     }).toList();
 
-    return Column(children : [firstRow] + rows);
+    return Column(children : rows);
   }
 
   List<dynamic> getAthleteNames(athletes) {
@@ -380,7 +404,7 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
                               width : 150,
                           padding : EdgeInsets.symmetric(horizontal: 5),
                           child : Text(
-                              score.score,
+                              score.score.toString(),
                               style: globalTextStyle,
                             ))),
                             Expanded(child : Container(
