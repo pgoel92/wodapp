@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 
 import './src/pages/data.dart';
+import './src/pages/workout.dart';
+import './src/utils/utils.dart';
 
 Text appTitle = Text('Workout of the Day',  style : TextStyle(fontWeight: FontWeight.bold, fontSize: 25));
 double verticalPadding = 50.0;
@@ -95,25 +97,7 @@ class _MyAppState extends State<MyApp> {
 }
 
 
-class Model {
-  Program wod;
-  Program updatedWod;
-  int athlete_id;
-  dynamic score;
-  String notes;
 
-  Model({this.athlete_id, this.score, this.notes, this.wod, this.updatedWod});
-
-  Map<String, String> toJson() {
-    return {
-      'athlete_id': athlete_id.toString(),
-      'score': score,
-      'notes' : notes,
-      'wod' : wod.toString(),
-      'updatedWod' : updatedWod.toString()
-    };
-  }
-}
 
 Model model = Model();
 TextStyle globalTextStyle = TextStyle(fontSize: 18);
@@ -297,20 +281,7 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
   SizedBox workoutInputBox(String initialValue, FormFieldSetter<String> onSaved, {double width = 40}) {
     return SizedBox(width : width, child : Card(
         color: Colors.black12,
-        child : Container(
-        child : TextFormField(
-            initialValue : initialValue,
-            validator: (value) {
-              if (value.isEmpty) {
-                return 'Please enter some text';
-              }
-              return null;
-            },
-            onSaved: onSaved,
-            decoration: new InputDecoration(
-                border: InputBorder.none
-                )
-        ))
+        child : Container(child : globalTextFormField(initialValue, onSaved))
     ));
   }
 

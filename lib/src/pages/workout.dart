@@ -1,6 +1,71 @@
 import 'package:agora_flutter_quickstart/main.dart';
 import 'package:flutter/material.dart';
 
+import '../utils/utils.dart';
+
+class Program {
+  final int id;
+  final Workout workout;
+
+  Program({this.id, this.workout});
+
+  factory Program.fromJson(Map<String, dynamic> json) {
+    return Program(
+        id: json['id'] ?? -1,
+        workout: Workout.fromJson(json['workout'] ?? {})
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "id" : id,
+      "workout" : workout.toJson()
+    };
+  }
+}
+
+class Score {
+  final int cid;
+  final String first_name;
+  final String last_name;
+  final bool is_rx;
+  final dynamic score;
+  final String notes;
+
+  Score({this.cid, this.first_name, this.last_name, this.is_rx, this.score, this.notes});
+
+  factory Score.fromJson(Map<String, dynamic> json) {
+    return Score(
+        cid: json['cid'],
+        first_name: json['first_name'],
+        last_name: json['last_name'],
+        is_rx: json['is_rx'],
+        score: json['score'],
+        notes: json['notes']
+    );
+  }
+}
+
+class Model {
+  Program wod;
+  Program updatedWod;
+  int athlete_id;
+  dynamic score;
+  String notes;
+
+  Model({this.athlete_id, this.score, this.notes, this.wod, this.updatedWod});
+
+  Map<String, String> toJson() {
+    return {
+      'athlete_id': athlete_id.toString(),
+      'score': score,
+      'notes' : notes,
+      'wod' : wod.toString(),
+      'updatedWod' : updatedWod.toString()
+    };
+  }
+}
+
 class Workout {
   int id;
   Map<String, dynamic> description;
@@ -43,16 +108,7 @@ class Workout {
 Expanded scoreInputBox(String initialValue, FormFieldSetter<String> onSaved, String hint, {double width = 40}) {
   return Expanded(child : Card(child : Container(
       height : 40,
-      child : TextFormField(
-          initialValue : initialValue,
-          validator: (value) {
-            if (value.isEmpty) {
-              return 'Please enter some text';
-            }
-            return null;
-          },
-          onSaved: onSaved,
-          decoration: new InputDecoration(
+      child : globalTextFormField(initialValue, onSaved, decoration: new InputDecoration(
               border: InputBorder.none,
               contentPadding:
               EdgeInsets.only(left: 15, bottom: 11, top: 11, right: 15),
@@ -139,7 +195,7 @@ class ForTimeWorkout extends Workout {
   }
 
   Column scoreInputColumn(Model model, {bool timeCap = false}) {
-    if (timeCap) {
+    if (timeCap == false) {
       return Column(children : [Row(children : [
       scoreInputBox("", (String value) { if (model.score == null) {
         model.score = {'mins' : int.parse(value)}; } else {model.score['mins'] = int.parse(value);}}, "minutes", width:60),

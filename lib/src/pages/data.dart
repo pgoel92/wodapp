@@ -6,49 +6,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'workout.dart';
 
-class Program {
-  final int id;
-  final Workout workout;
-
-  Program({this.id, this.workout});
-
-  factory Program.fromJson(Map<String, dynamic> json) {
-    return Program(
-        id: json['id'] ?? -1,
-        workout: Workout.fromJson(json['workout'] ?? {})
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      "id" : id,
-      "workout" : workout.toJson()
-    };
-  }
-}
-
-class Score {
-  final int cid;
-  final String first_name;
-  final String last_name;
-  final bool is_rx;
-  final dynamic score;
-  final String notes;
-
-  Score({this.cid, this.first_name, this.last_name, this.is_rx, this.score, this.notes});
-
-  factory Score.fromJson(Map<String, dynamic> json) {
-    return Score(
-      cid: json['cid'],
-        first_name: json['first_name'],
-        last_name: json['last_name'],
-      is_rx: json['is_rx'],
-      score: json['score'],
-      notes: json['notes']
-    );
-  }
-}
-
 Future<Program> fetch_wod(date) async {
   print('Fetching wod for date ${date}');
   try {
