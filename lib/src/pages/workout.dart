@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../utils/utils.dart';
 
+import 'dart:convert';
+
 class Program {
   final int id;
   final Workout workout;
@@ -30,18 +32,20 @@ class Score {
   final String last_name;
   final bool is_rx;
   final dynamic score;
+  final String type;
   final String notes;
 
-  Score({this.cid, this.first_name, this.last_name, this.is_rx, this.score, this.notes});
+  Score({this.cid, this.first_name, this.last_name, this.is_rx, this.score, this.type, this.notes});
 
-  factory Score.fromJson(Map<String, dynamic> json) {
+  factory Score.fromJson(Map<String, dynamic> jsonMap) {
     return Score(
-        cid: json['cid'],
-        first_name: json['first_name'],
-        last_name: json['last_name'],
-        is_rx: json['is_rx'],
-        score: json['score'],
-        notes: json['notes']
+        cid: jsonMap['cid'],
+        first_name: jsonMap['first_name'],
+        last_name: jsonMap['last_name'],
+        is_rx: jsonMap['is_rx'],
+        score: json.decode(jsonMap['score']),
+        type: jsonMap['type'],
+        notes: jsonMap['notes']
     );
   }
 }
@@ -103,19 +107,41 @@ class Workout {
   Column scoreInputColumn(Model model) {
     return Column(children : []);
   }
+
+  static String parseScore(Score score) {
+    switch(score.type) {
+      case "amrap": {
+        return score.score['rounds'].toString() + " + " + score.score['reps'].toString();}
+      case "for_time": {return score.score.toString();}
+      case "21-15-9": {return score.score.toString();}
+    }
+  }
 }
 
 Expanded scoreInputBox(String initialValue, FormFieldSetter<String> onSaved, String hint, {double width = 40}) {
   return Expanded(child : Card(child : Container(
-      height : 40,
-      child : globalTextFormField(initialValue, onSaved, decoration: new InputDecoration(
+      height : 100,
+      child : TextFormField(
+          initialValue : initialValue,
+          validator: (value) {
+            if (value.isEmpty) {
+              return 'Please enter some text';
+            }
+            return null;
+          },
+          onSaved: onSaved,
+          style: scoreTextStyle,
+          textAlign : TextAlign.center,
+          decoration: new InputDecoration(
               border: InputBorder.none,
               contentPadding:
-              EdgeInsets.only(left: 15, bottom: 11, top: 11, right: 15),
-              hintText: hint),
-      ))
-  ));
+              EdgeInsets.only(left: 15, bottom: 11, top: 25, right: 15),
+              hintText: hint)
+      )))
+  );
 }
+
+TextStyle scoreTextStyle = TextStyle(fontSize: 28, fontWeight: FontWeight.bold);
 
 class AMRAPWorkout extends Workout{
   int time;
@@ -153,8 +179,11 @@ class AMRAPWorkout extends Workout{
 
   Column scoreInputColumn(Model model) {
     return Column(children : [Row(children : [
-      scoreInputBox("", (String value) { model.score = value; }, "rounds", width:60),
-      Expanded(child : Text('rounds in ' + this.time.toString() + ' mins of :', style : globalTextStyle)),
+      scoreInputBox("", (String value) { if (model.score == null) {
+        model.score = {'rounds' : int.parse(value)}; } else {model.score['rounds'] = int.parse(value);}}, "rounds", width:60),
+      Text(' + ', style : scoreTextStyle),
+      scoreInputBox("", (String value) { if (model.score == null) {
+        model.score = {'reps' : int.parse(value)}; } else {model.score['reps'] = int.parse(value);}}, "reps", width:60)
     ])]);
   }
 }
@@ -172,7 +201,6 @@ class ForTimeWorkout extends Workout {
   }
 
   factory ForTimeWorkout.fromJson(Map<String, dynamic> json) {
-    print("here");
     return ForTimeWorkout(
         json['id'] ?? -1,
         Map<String, String>.from(json['description'] ?? {'rx' :'Nothing to see here'}),
@@ -214,9 +242,6 @@ class ForTimeWorkout extends Workout {
     }
   }
 
-  String parseScore() {
-    
-  }
 }
 
 class TwentyOne_Fifteen_Nine extends Workout {
@@ -230,7 +255,6 @@ class TwentyOne_Fifteen_Nine extends Workout {
   }
 
   factory TwentyOne_Fifteen_Nine.fromJson(Map<String, dynamic> json) {
-    print("here");
     return TwentyOne_Fifteen_Nine(
         json['id'] ?? -1,
         Map<String, String>.from(json['description'] ?? {'rx' :'Nothing to see here'}),

@@ -375,7 +375,7 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
                               width : 150,
                           padding : EdgeInsets.symmetric(horizontal: 5),
                           child : Text(
-                              score.score.toString(),
+                              Workout.parseScore(score),
                               style: globalTextStyle,
                             ))),
                             Expanded(child : Container(
