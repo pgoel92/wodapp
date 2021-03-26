@@ -8,7 +8,7 @@ import './src/pages/workout.dart';
 import './src/utils/utils.dart';
 
 Text appTitle = Text('Workout of the Day',  style : TextStyle(fontWeight: FontWeight.bold, fontSize: 25));
-double verticalPadding = 50.0;
+double verticalPadding = 20.0;
 double mainWidth = 1000.0;
 DateTime date = DateTime.now();
 int daysAgo = 0;
@@ -39,6 +39,8 @@ Scaffold scorePage = Scaffold(
               child : Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children : [
+                    Container(padding : EdgeInsets.all(10),child : Text('Add Score', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 25))),
+                    WodUpdateWidget(),
                     AddScoreWidget()
                   ]
               )
@@ -153,6 +155,104 @@ class _WodStatefulWidgetState extends State<WodStatefulWidget> {
   }
 }
 
+class WodUpdateWidget extends StatefulWidget {
+  WodUpdateWidget({Key key}) : super(key: key);
+
+  @override
+  _WodUpdateWidgetState createState() => _WodUpdateWidgetState();
+}
+
+class _WodUpdateWidgetState extends State<WodUpdateWidget> {
+
+  List<bool> isRxSelected = [true, false];
+  bool isEdit = false;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+        GestureDetector(
+        onTap: () => {setState(() {isEdit = !isEdit;})},
+        child: Card(
+              child : Container(
+                  padding : EdgeInsets.all(20.0),
+                  child : FutureBuilder<Program>(
+                      future: fetch_wod(getDisplayDate()),
+                      builder: (context, snapshot) {
+                        if (isEdit) {
+                          return Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                          Container(padding : EdgeInsets.all(10.0), child : workoutForm())]);
+                        }
+                        if (snapshot.hasData) {
+                          var data = snapshot.data;
+                          model.wod = data;
+                          if (data.workout.description != null) {
+                            return Text(data.workout.description['rx'],
+                                style: globalTextStyle);
+                          } else {
+                            return Text("Rest day", style: globalTextStyle);
+                          }
+                        } else if (snapshot.hasError) {
+                          return Text("${snapshot.error}");
+                        }
+
+                        // By default, show a loading spinner.
+                        return Center(child : CircularProgressIndicator(strokeWidth: 4.0))
+                        ;
+                      }
+                  )
+              )))
+        ]
+    );
+  }
+
+  SizedBox workoutInputBox(String initialValue, FormFieldSetter<String> onSaved, {double width = 40}) {
+    return SizedBox(width : width, child : Card(
+        color: Colors.black12,
+        child : Container(child : globalTextFormField(initialValue, onSaved))
+    ));
+  }
+
+  Column workoutForm() {
+    Program wod = model.wod;
+    model.updatedWod = model.wod;
+    String REPS_KEY = "n_reps";
+    String MOVEMENT_KEY = "mov";
+    String WEIGHT_KEY = "weight_m";
+    if (wod.workout.round == null || wod.workout.round.isEmpty) {
+      return Column(children : [Container(padding : EdgeInsets.all(20.0),child : Text("All good :)", style : globalTextStyle))]);
+    }
+    List<Row> rows = model.updatedWod.workout.round.map((Map<String, dynamic> mov) {
+      var children = [
+        workoutInputBox(mov[REPS_KEY].toString(), (String value) {
+          mov[REPS_KEY] = value;
+        }),
+        Text(mov[MOVEMENT_KEY], style : globalTextStyle)
+      ];
+      if(mov[WEIGHT_KEY] != null) {
+        children = children + [
+          workoutInputBox(mov[WEIGHT_KEY].toString(), (String value) {
+            mov[WEIGHT_KEY] = value;
+          }),
+          Text('lbs', style : globalTextStyle)
+        ];
+      }
+      return Row(children : children);
+    }).toList();
+
+    return Column(children : rows);
+  }
+}
+
 class AddScoreWidget extends StatefulWidget {
   AddScoreWidget({Key key}) : super(key: key);
 
@@ -179,7 +279,6 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
         child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children : [
-      Container(padding : EdgeInsets.all(10),child : Text('Add Score', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 25))),
           FutureBuilder<List<dynamic>>(
               future: futureAthletes,
               builder: (context, snapshot) {
@@ -219,70 +318,36 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
                 return CircularProgressIndicator();
               }),
       scoreForm(),
-      Card(child : Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Container(padding : EdgeInsets.all(10.0), child : workoutForm()),
-                  /*Card(child : TextFormField(
-                      decoration: const InputDecoration(
-                        labelText: "Notes",
-                        border: const OutlineInputBorder(
-                            borderRadius: const BorderRadius.all(Radius.circular(4.0)),
-                            borderSide: const BorderSide()
-                        ),
-                        hintText: 'Notes',
+          Center(
+              child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child :RaisedButton(
+                      padding: EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 10,
                       ),
-                      validator: (value) {
-                        if (value.isEmpty) {
-                          return 'Please enter some text';
-                        }
-                        return null;
-                      },
-                      onSaved: (String value) {
-                        model.notes = value;
-                      },
-                    ),
-                  ),*/
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child :RaisedButton(
-                        padding: EdgeInsets.symmetric(
-                          vertical: 10,
-                          horizontal: 10,
-                        ),
-                        onPressed: () {
-                          // Validate will return true if the form is valid, or false if
-                          // the form is invalid.
-                          if (_formKey.currentState.validate()) {
-                            // Process data.
-                            _formKey.currentState.save();
-                            put_score(model);
-                            Navigator.of(context).push(
-                                MaterialPageRoute<void>(
+                      onPressed: () {
+                        // Validate will return true if the form is valid, or false if
+                        // the form is invalid.
+                        if (_formKey.currentState.validate()) {
+                          // Process data.
+                          _formKey.currentState.save();
+                          put_score(model);
+                          Navigator.of(context).push(
+                              MaterialPageRoute<void>(
                                 // NEW lines from here...
-                                builder: (BuildContext context) {
-                                  return homePage;
-                                })
-                            );
-                          }
-                        },
-                        child: Text('Submit',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w400,
-                          ),)
-                      ))),
-                ],
-        ))
+                                  builder: (BuildContext context) {
+                                    return homePage;
+                                  })
+                          );
+                        }
+                      },
+                      child: Text('Submit',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w400,
+                        ),)
+                  )))
     ]));
-  }
-
-  SizedBox workoutInputBox(String initialValue, FormFieldSetter<String> onSaved, {double width = 40}) {
-    return SizedBox(width : width, child : Card(
-        color: Colors.black12,
-        child : Container(child : globalTextFormField(initialValue, onSaved))
-    ));
   }
 
   Column scoreForm() {
@@ -295,35 +360,7 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
     return wod.workout.scoreInputColumn(model);
   }
 
-  Column workoutForm() {
-    Program wod = model.wod;
-    model.updatedWod = model.wod;
-    String REPS_KEY = "n_reps";
-    String MOVEMENT_KEY = "mov";
-    String WEIGHT_KEY = "weight_m";
-    if (wod.workout.round == null || wod.workout.round.isEmpty) {
-      return Column(children : [Container(padding : EdgeInsets.all(20.0),child : Text("All good :)", style : globalTextStyle))]);
-    }
-    List<Row> rows = model.updatedWod.workout.round.map((Map<String, dynamic> mov) {
-      var children = [
-        workoutInputBox(mov[REPS_KEY].toString(), (String value) {
-          mov[REPS_KEY] = value;
-        }),
-        Text(mov[MOVEMENT_KEY], style : globalTextStyle)
-      ];
-      if(mov[WEIGHT_KEY] != null) {
-        children = children + [
-          workoutInputBox(mov[WEIGHT_KEY].toString(), (String value) {
-            mov[WEIGHT_KEY] = value;
-          }),
-          Text('lbs', style : globalTextStyle)
-        ];
-      }
-      return Row(children : children);
-    }).toList();
 
-    return Column(children : rows);
-  }
 
   List<dynamic> getAthleteNames(athletes) {
     return athletes.map((athlete) => (athlete['first_name'] + " " + athlete['last_name'])).toList();

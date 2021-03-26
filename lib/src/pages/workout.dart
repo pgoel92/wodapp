@@ -111,8 +111,11 @@ class Workout {
   static String parseScore(Score score) {
     switch(score.type) {
       case "amrap": {
-        return score.score['rounds'].toString() + " + " + score.score['reps'].toString();}
-      case "for_time": {return score.score.toString();}
+        return score.score['rounds'].toString() + " + " + score.score['reps'].toString();
+      }
+      case "for_time": {
+        return score.score['mins'].toString() + " : " + score.score['seconds'].toString();
+      }
       case "21-15-9": {return score.score.toString();}
     }
   }
