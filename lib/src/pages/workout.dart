@@ -109,7 +109,7 @@ class Workout {
   }
 
   String getDescription() {
-    return "";
+    return "Nothing to see here";
   }
 
   static String parseScore(Score score) {

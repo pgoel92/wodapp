@@ -133,7 +133,7 @@ class _WodStatefulWidgetState extends State<WodStatefulWidget> {
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     var data = snapshot.data;
-                    model.wod = data;
+                    model.wod = model.updatedWod = data;
                     var description = data.workout.getDescription();
                     if (description != null) {
                         return Text(description,
@@ -167,6 +167,7 @@ class _WodUpdateWidgetState extends State<WodUpdateWidget> {
 
   List<bool> isRxSelected = [true, false];
   bool isEdit = false;
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -179,42 +180,40 @@ class _WodUpdateWidgetState extends State<WodUpdateWidget> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
         GestureDetector(
-        onTap: () => {setState(() {isEdit = !isEdit;})},
+        onTap: () => {setState(() {isEdit = !isEdit; _formKey.currentState.save();})},
         child: Card(
-              child : Container(
+              child : Form(
+                key: _formKey,
+                child: Container(
                   padding : EdgeInsets.all(20.0),
-                  child : FutureBuilder<Program>(
-                      future: fetch_wod(getDisplayDate()),
-                      builder: (context, snapshot) {
-                        if (isEdit) {
-                          return Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                          Container(padding : EdgeInsets.all(10.0), child : workoutForm())]);
-                        }
-                        if (snapshot.hasData) {
-                          var data = snapshot.data;
-                          model.wod = data;
-                          var description = data.workout.getDescription();
-                          if (description != null) {
-                            return Text(description,
-                                style: globalTextStyle);
-                          } else {
-                            return Text("Rest day", style: globalTextStyle);
-                          }
-                        } else if (snapshot.hasError) {
-                          return Text("${snapshot.error}");
-                        }
-
-                        // By default, show a loading spinner.
-                        return Center(child : CircularProgressIndicator(strokeWidth: 4.0))
-                        ;
-                      }
-                  )
-              )))
+                  child : workoutEditColumn()
+              ))))
         ]
     );
+  }
+
+  Column workoutEditColumn() {
+    var children;
+    if (isEdit) {
+      children = [ Container(padding : EdgeInsets.all(10.0), child : workoutForm()) ];
+    } else {
+      var description;
+      if (model.updatedWod != null) {
+        description = model.updatedWod.workout.getDescription();
+      } else {
+        description = model.wod.workout.getDescription();
+      }
+      if (description != null) {
+        children = [ Text(description, style: globalTextStyle)];
+      } else {
+        children = [ Text("Rest day", style: globalTextStyle)];
+      }
+    }
+
+    return Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children);
   }
 
   SizedBox workoutInputBox(String initialValue, FormFieldSetter<String> onSaved, {double width = 40}) {
@@ -226,7 +225,9 @@ class _WodUpdateWidgetState extends State<WodUpdateWidget> {
 
   Column workoutForm() {
     Program wod = model.wod;
-    model.updatedWod = model.wod;
+    if (model.updatedWod == null) {
+      model.updatedWod = model.wod;
+    }
     String REPS_KEY = "n_reps";
     String MOVEMENT_KEY = "mov";
     String WEIGHT_KEY = "weight_m";
@@ -288,7 +289,6 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
                   return Card(child : new DropdownButtonFormField<int>(
                       value : _selectedAthlete,
                       items: snapshot.data.map((dynamic value) {
-                        print(value);
                         String name = value['first_name'] + " " + value['last_name'];
                         return new DropdownMenuItem<int>(
                           value: value['athlete_id'],
@@ -354,7 +354,9 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
 
   Column scoreForm() {
     Program wod = model.wod;
-    model.updatedWod = model.wod;
+    if (model.updatedWod == null) {
+      model.updatedWod = model.wod;
+    }
     if (wod.workout.round == null || wod.workout.round.isEmpty) {
       return Column(children : [Container(padding : EdgeInsets.all(20.0),child : Text("All good :)", style : globalTextStyle))]);
     }
