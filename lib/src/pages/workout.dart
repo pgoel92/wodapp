@@ -108,6 +108,10 @@ class Workout {
     return Column(children : []);
   }
 
+  String getDescription() {
+    return "";
+  }
+
   static String parseScore(Score score) {
     switch(score.type) {
       case "amrap": {
@@ -189,6 +193,16 @@ class AMRAPWorkout extends Workout{
         model.score = {'reps' : int.parse(value)}; } else {model.score['reps'] = int.parse(value);}}, "reps", width:60)
     ])]);
   }
+
+  String getDescription() {
+    var description = 'AMRAP:\n';
+    for (var i = 0; i < this.round.length; i++) {
+      var item = this.round[i];
+      description = description + item['n_reps'].toString() + " " + item['mov'];
+      description = description + '\n';
+    }
+    return description;
+  }
 }
 
 class ForTimeWorkout extends Workout {
@@ -244,6 +258,17 @@ class ForTimeWorkout extends Workout {
     ])]);
     }
   }
+
+  String getDescription() {
+    var description = 'For time:\n';
+    for (var i = 0; i < this.round.length; i++) {
+        var item = this.round[i];
+        description = description + item['n_reps'].toString() + " " + item['mov'];
+        description = description + '\n';
+    }
+    return description;
+  }
+
 
 }
 

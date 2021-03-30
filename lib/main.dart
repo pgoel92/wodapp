@@ -134,8 +134,9 @@ class _WodStatefulWidgetState extends State<WodStatefulWidget> {
                   if (snapshot.hasData) {
                     var data = snapshot.data;
                     model.wod = data;
-                    if (data.workout.description != null) {
-                        return Text(data.workout.description['rx'],
+                    var description = data.workout.getDescription();
+                    if (description != null) {
+                        return Text(description,
                             style: globalTextStyle);
                     } else {
                       return Text("Rest day", style: globalTextStyle);
@@ -195,8 +196,9 @@ class _WodUpdateWidgetState extends State<WodUpdateWidget> {
                         if (snapshot.hasData) {
                           var data = snapshot.data;
                           model.wod = data;
-                          if (data.workout.description != null) {
-                            return Text(data.workout.description['rx'],
+                          var description = data.workout.getDescription();
+                          if (description != null) {
+                            return Text(description,
                                 style: globalTextStyle);
                           } else {
                             return Text("Rest day", style: globalTextStyle);
