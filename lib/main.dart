@@ -216,41 +216,16 @@ class _WodUpdateWidgetState extends State<WodUpdateWidget> {
         children: children);
   }
 
-  SizedBox workoutInputBox(String initialValue, FormFieldSetter<String> onSaved, {double width = 40}) {
-    return SizedBox(width : width, child : Card(
-        color: Colors.black12,
-        child : Container(child : globalTextFormField(initialValue, onSaved))
-    ));
-  }
-
   Column workoutForm() {
     Program wod = model.wod;
     if (model.updatedWod == null) {
       model.updatedWod = model.wod;
     }
-    String REPS_KEY = "n_reps";
-    String MOVEMENT_KEY = "mov";
-    String WEIGHT_KEY = "weight_m";
+
     if (wod.workout.round == null || wod.workout.round.isEmpty) {
       return Column(children : [Container(padding : EdgeInsets.all(20.0),child : Text("All good :)", style : globalTextStyle))]);
     }
-    List<Row> rows = model.updatedWod.workout.round.map((Map<String, dynamic> mov) {
-      var children = [
-        workoutInputBox(mov[REPS_KEY].toString(), (String value) {
-          mov[REPS_KEY] = value;
-        }),
-        Text(mov[MOVEMENT_KEY], style : globalTextStyle)
-      ];
-      if(mov[WEIGHT_KEY] != null) {
-        children = children + [
-          workoutInputBox(mov[WEIGHT_KEY].toString(), (String value) {
-            mov[WEIGHT_KEY] = value;
-          }),
-          Text('lbs', style : globalTextStyle)
-        ];
-      }
-      return Row(children : children);
-    }).toList();
+    List<Row> rows = model.updatedWod.workout.getWorkoutUpdateForm();
 
     return Column(children : rows);
   }

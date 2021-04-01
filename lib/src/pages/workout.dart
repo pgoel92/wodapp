@@ -5,6 +5,10 @@ import '../utils/utils.dart';
 
 import 'dart:convert';
 
+var REPS_KEY = "n_reps";
+var MOVEMENT_KEY = "mov";
+var WEIGHT_KEY = "weight_m";
+
 class Program {
   final int id;
   final Workout workout;
@@ -120,8 +124,28 @@ class Workout {
       case "for_time": {
         return score.score['mins'].toString() + " : " + score.score['seconds'].toString();
       }
-      case "21-15-9": {return score.score.toString();}
+      case "21-15-9": {return score.score['mins'].toString() + " : " + score.score['seconds'].toString(); }
     }
+  }
+
+  List<Row> getWorkoutUpdateForm() {
+    return this.round.map((Map<String, dynamic> mov) {
+      var children = [
+        workoutInputBox(mov[REPS_KEY].toString(), (String value) {
+          mov[REPS_KEY] = value;
+        }),
+        Text(mov[MOVEMENT_KEY], style : globalTextStyle)
+      ];
+      if(mov[WEIGHT_KEY] != null) {
+        children = children + [
+          workoutInputBox(mov[WEIGHT_KEY].toString(), (String value) {
+            mov[WEIGHT_KEY] = value;
+          }),
+          Text('lbs', style : globalTextStyle)
+        ];
+      }
+      return Row(children : children);
+    }).toList();
   }
 }
 
@@ -146,6 +170,13 @@ Expanded scoreInputBox(String initialValue, FormFieldSetter<String> onSaved, Str
               hintText: hint)
       )))
   );
+}
+
+SizedBox workoutInputBox(String initialValue, FormFieldSetter<String> onSaved, {double width = 40}) {
+  return SizedBox(width : width, child : Card(
+      color: Colors.black12,
+      child : Container(child : globalTextFormField(initialValue, onSaved))
+  ));
 }
 
 TextStyle scoreTextStyle = TextStyle(fontSize: 28, fontWeight: FontWeight.bold);
@@ -202,6 +233,26 @@ class AMRAPWorkout extends Workout{
       description = description + '\n';
     }
     return description;
+  }
+
+  List<Row> getWorkoutUpdateForm() {
+    return this.round.map((Map<String, dynamic> mov) {
+      var children = [
+        workoutInputBox(mov[REPS_KEY].toString(), (String value) {
+          mov[REPS_KEY] = value;
+        }),
+        Text(mov[MOVEMENT_KEY], style : globalTextStyle)
+      ];
+      if(mov[WEIGHT_KEY] != null) {
+        children = children + [
+          workoutInputBox(mov[WEIGHT_KEY].toString(), (String value) {
+            mov[WEIGHT_KEY] = value;
+          }),
+          Text('lbs', style : globalTextStyle)
+        ];
+      }
+      return Row(children : children);
+    }).toList();
   }
 }
 
@@ -269,6 +320,26 @@ class ForTimeWorkout extends Workout {
     return description;
   }
 
+  List<Row> getWorkoutUpdateForm() {
+    return this.round.map((Map<String, dynamic> mov) {
+      var children = [
+        workoutInputBox(mov[REPS_KEY].toString(), (String value) {
+          mov[REPS_KEY] = value;
+        }),
+        Text(mov[MOVEMENT_KEY], style : globalTextStyle)
+      ];
+      if(mov[WEIGHT_KEY] != null) {
+        children = children + [
+          workoutInputBox(mov[WEIGHT_KEY].toString(), (String value) {
+            mov[WEIGHT_KEY] = value;
+          }),
+          Text('lbs', style : globalTextStyle)
+        ];
+      }
+      return Row(children : children);
+    }).toList();
+  }
+
 
 }
 
@@ -320,5 +391,25 @@ class TwentyOne_Fifteen_Nine extends Workout {
       description = description + '\n';
     }
     return description;
+  }
+
+  List<Row> getWorkoutUpdateForm() {
+    return this.round.map((Map<String, dynamic> mov) {
+      var children = [
+        workoutInputBox(mov[REPS_KEY].toString(), (String value) {
+          mov[REPS_KEY] = value;
+        }),
+        Text(mov[MOVEMENT_KEY], style : globalTextStyle)
+      ];
+      if(mov[WEIGHT_KEY] != null) {
+        children = children + [
+          workoutInputBox(mov[WEIGHT_KEY].toString(), (String value) {
+            mov[WEIGHT_KEY] = value;
+          }),
+          Text('lbs', style : globalTextStyle)
+        ];
+      }
+      return Row(children : children);
+    }).toList();
   }
 }

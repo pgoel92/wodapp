@@ -1,9 +1,6 @@
-import 'package:agora_flutter_quickstart/main.dart';
-import 'package:path/path.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'workout.dart';
 
 Future<Program> fetch_wod(date) async {
