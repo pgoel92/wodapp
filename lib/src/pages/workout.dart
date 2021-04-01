@@ -306,9 +306,19 @@ class TwentyOne_Fifteen_Nine extends Workout {
     return Column(children : [Row(children : [
       scoreInputBox("", (String value) { if (model.score == null) {
         model.score = {'mins' : int.parse(value)}; } else {model.score['mins'] = int.parse(value);}}, "minutes", width:60),
-      Expanded(child : Text(' : ', style : globalTextStyle)),
+      Text(' : ', style : globalTextStyle),
       scoreInputBox("", (String value) { if (model.score == null) {
         model.score = {'seconds' : int.parse(value)}; } else {model.score['seconds'] = int.parse(value);}}, "seconds", width:60)
     ])]);
+  }
+
+  String getDescription() {
+    var description = '21-15-9 reps of :\n';
+    for (var i = 0; i < this.round.length; i++) {
+      var item = this.round[i];
+      description = description + item['mov'];
+      description = description + '\n';
+    }
+    return description;
   }
 }
