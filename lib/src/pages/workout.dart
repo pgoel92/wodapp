@@ -38,8 +38,9 @@ class Score {
   final dynamic score;
   final String type;
   final String notes;
+  final String date;
 
-  Score({this.cid, this.first_name, this.last_name, this.is_rx, this.score, this.type, this.notes});
+  Score({this.cid, this.first_name, this.last_name, this.is_rx, this.score, this.type, this.notes, this.date});
 
   factory Score.fromJson(Map<String, dynamic> jsonMap) {
     return Score(
@@ -49,7 +50,8 @@ class Score {
         is_rx: jsonMap['is_rx'],
         score: json.decode(jsonMap['score']),
         type: jsonMap['type'],
-        notes: jsonMap['notes']
+        notes: jsonMap['notes'],
+        date: jsonMap['date']
     );
   }
 }

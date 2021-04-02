@@ -68,24 +68,45 @@ class _MyAppState extends State<MyApp> {
                 padding : EdgeInsets.symmetric(vertical : verticalPadding),
                 child : SizedBox(
                     width : mainWidth,
-                    child : Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children : [
-                          Padding(
-                              padding : EdgeInsets.all(10.0),
-                              child : Row(
-                                  children : [
-                                    Expanded(child : IconButton(icon: Icon(IconData(0xe5a8, fontFamily: 'MaterialIcons', matchTextDirection: true)), onPressed: _subtractDate)),
-                                    Text(DateFormat.yMMMMEEEEd().format(date.subtract(new Duration(days: daysAgo))), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22.0)),
-                                    Expanded(child : IconButton(icon: Icon(IconData(0xe5b0, fontFamily: 'MaterialIcons', matchTextDirection: true)), onPressed: _addDate))
-                                  ]
-                              )
-                          ),
-                          WodStatefulWidget(),
-                          ListScoresWidget()
-                        ]
-                    ))
-            )),
+                    child : FutureBuilder<Program>(
+                        future: fetch_wod(getDisplayDate()),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            var data = snapshot.data;
+                            model.wod = model.updatedWod = data;
+                            return Column(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Padding(
+                                      padding: EdgeInsets.all(10.0),
+                                      child: Row(
+                                          children: [
+                                            Expanded(child: IconButton(icon: Icon(IconData(
+                                                0xe5a8, fontFamily: 'MaterialIcons',
+                                                matchTextDirection: true)),
+                                                onPressed: _subtractDate)),
+                                            Text(DateFormat.yMMMMEEEEd().format(
+                                                date.subtract(new Duration(days: daysAgo))),
+                                                style: TextStyle(
+                                                    fontWeight: FontWeight.bold, fontSize: 22.0)),
+                                            Expanded(child: IconButton(icon: Icon(IconData(
+                                                0xe5b0, fontFamily: 'MaterialIcons',
+                                                matchTextDirection: true)), onPressed: _addDate))
+                                          ]
+                                      )
+                                  ),
+                                  WodStatefulWidget(),
+                                  ListScoresWidget()
+                                ]
+                            );
+                          } else if (snapshot.hasError) {
+                            return Text("${snapshot.error}");
+                          }
+
+                          // By default, show a loading spinner.
+                          return Center(child: CircularProgressIndicator(strokeWidth: 4.0));
+                        })
+                ))),
             )));
     return homePage;
   }
@@ -128,31 +149,21 @@ class _WodStatefulWidgetState extends State<WodStatefulWidget> {
           Card(
             child : Container(
               padding : EdgeInsets.all(20.0),
-              child : FutureBuilder<Program>(
-                future: fetch_wod(getDisplayDate()),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    var data = snapshot.data;
-                    model.wod = model.updatedWod = data;
-                    var description = data.workout.getDescription();
-                    if (description != null) {
-                        return Text(description,
-                            style: globalTextStyle);
-                    } else {
-                      return Text("Rest day", style: globalTextStyle);
-                    }
-                  } else if (snapshot.hasError) {
-                    return Text("${snapshot.error}");
-                  }
-
-                  // By default, show a loading spinner.
-                  return Center(child : CircularProgressIndicator(strokeWidth: 4.0))
-                  ;
-                }
-              )
+              child : generateDescription()
         ))
       ]
     );
+  }
+
+  Text generateDescription() {
+    print(model.wod);
+    var description = model.wod.workout.getDescription();
+    if (description != null) {
+      return Text(description,
+          style: globalTextStyle);
+    } else {
+      return Text("Rest day", style: globalTextStyle);
+    }
   }
 }
 
@@ -354,8 +365,6 @@ class ListScoresWidget extends StatefulWidget {
 }
 
 class _ListScoresWidgetState extends State<ListScoresWidget> {
-  final _formKey = GlobalKey<FormState>();
-  Model model = Model();
 
   @override
   void initState() {
@@ -369,66 +378,73 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children : [
               Container(padding : EdgeInsets.all(10),child : Text('Scores', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 25))),
-              FutureBuilder<List<Score>>(
-              future: fetch_scores(getDisplayDate()),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  final tiles = snapshot.data.map(
-                        (Score score) {
-                      return Card(child : ListTile(
-                        dense: true,
-                        title: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children : [
-                            Expanded(child : Container(
-                              width : 150,
-                              padding : EdgeInsets.symmetric(horizontal: 5),
-                              child : Text(
-                              score.first_name??'',
-                              style: globalTextStyle,
-                            ))),
-                          Expanded(child : Container(
-                              width : 150,
-                          padding : EdgeInsets.symmetric(horizontal: 5),
-                          child : Text(
-                              Workout.parseScore(score),
-                              style: globalTextStyle,
-                            ))),
-                            Expanded(child : Container(
-                                width : 150,
-                            padding : EdgeInsets.symmetric(horizontal: 5),
-                          child : Text(
-                              score.notes??'',
-                              style: globalTextStyle,
-                            )))
-                          ]
-                        ),
-                      ));
-                    },
-                  );
-                  final divided = ListTile.divideTiles(
-                    context: context,
-                    tiles: tiles,
-                  ).toList();
-                  return Column(children : [
-                    ListView(children : divided, shrinkWrap: true),
-                      Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child : IconButton(icon: Icon(CupertinoIcons.plus_circle), onPressed: _pushSaved)
-                      )]
-                  );
-                } else if (snapshot.hasError) {
-                  return Text("${snapshot.error}");
-                }
-
-                // By default, s  how a loading spinner.
-                return CircularProgressIndicator();
-              }
-              )
+              scoreBuilder(fetch_scores(getDisplayDate())),
+              Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child : IconButton(icon: Icon(CupertinoIcons.plus_circle), onPressed: _pushSaved)
+              ),
+              scoreBuilder(fetch_customer_scores(model.wod.workout.id))
             ]
 
     );
   }
+
+  FutureBuilder<List<Score>> scoreBuilder(Future<List<Score>> future) {
+    return FutureBuilder<List<Score>>(
+        future: future,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            final tiles = snapshot.data.map(
+                  (Score score) {
+                return Card(child : ListTile(
+                  dense: true,
+                  title: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children : [
+                        Expanded(child : Container(
+                            width : 150,
+                            padding : EdgeInsets.symmetric(horizontal: 5),
+                            child : Text(
+                              score.first_name??'',
+                              style: globalTextStyle,
+                            ))),
+                        Expanded(child : Container(
+                            width : 150,
+                            padding : EdgeInsets.symmetric(horizontal: 5),
+                            child : Text(
+                              Workout.parseScore(score),
+                              style: globalTextStyle,
+                            ))),
+                        Expanded(child : Container(
+                            width : 150,
+                            padding : EdgeInsets.symmetric(horizontal: 5),
+                            child : Text(
+                              score.date??'',
+                              style: globalTextStyle,
+                            )))
+                      ]
+                  ),
+                ));
+              },
+            );
+            final divided = ListTile.divideTiles(
+              context: context,
+              tiles: tiles,
+            ).toList();
+            return Column(children : [
+              ListView(children : divided, shrinkWrap: true)
+              ]
+            );
+          } else if (snapshot.hasError) {
+            return Text("${snapshot.error}");
+          }
+
+          // By default, s  how a loading spinner.
+          return CircularProgressIndicator();
+        }
+    );
+  }
+
   void _pushSaved() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(

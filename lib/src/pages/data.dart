@@ -66,6 +66,29 @@ Future<List<Score>> fetch_scores(date) async {
   }
 }
 
+Future<List<Score>> fetch_customer_scores(workout_id) async {
+  print('Fetching scores for workout_id ${workout_id}');
+  try {
+    final response = await http.get('http://127.0.0.1:5000/customers/scores?workout_id=$workout_id');
+    if (response.statusCode == 200) {
+      // If the server did return a 200 OK response,
+      // then parse the JSON.
+      var scores_json = json.decode(response.body);
+      List<Score> scores = [];
+      for (var i = 0; i < scores_json.length; i++) {
+        scores.add(Score.fromJson(scores_json[i]));
+      }
+      return scores;
+    } else {
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to load scores');
+    }
+  } on Exception {
+    return [];
+  }
+}
+
 Future<http.Response> put_data(Map<String, dynamic> body) async {
   print('Putting data');
   return http.post('http://127.0.0.1:5000/customers/ABC',
