@@ -383,7 +383,7 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
                   padding: const EdgeInsets.all(10.0),
                   child : IconButton(icon: Icon(CupertinoIcons.plus_circle), onPressed: _pushSaved)
               ),
-              scoreBuilder(fetch_customer_scores(model.wod.workout.id))
+              scoreBuilder(fetch_customer_scores(getDisplayDate(), model.wod.workout.id))
             ]
 
     );

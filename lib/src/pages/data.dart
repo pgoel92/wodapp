@@ -66,10 +66,10 @@ Future<List<Score>> fetch_scores(date) async {
   }
 }
 
-Future<List<Score>> fetch_customer_scores(workout_id) async {
+Future<List<Score>> fetch_customer_scores(date, workout_id) async {
   print('Fetching scores for workout_id ${workout_id}');
   try {
-    final response = await http.get('http://127.0.0.1:5000/customers/scores?workout_id=$workout_id');
+    final response = await http.get('http://127.0.0.1:5000/customers/scores?workout_id=$workout_id&date=$date');
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
       // then parse the JSON.

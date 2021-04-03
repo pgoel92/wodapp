@@ -231,7 +231,11 @@ class AMRAPWorkout extends Workout{
     var description = 'AMRAP:\n';
     for (var i = 0; i < this.round.length; i++) {
       var item = this.round[i];
-      description = description + item['n_reps'].toString() + " " + item['mov'];
+      if (item['n_reps'] != null) {
+        description = description + item['n_reps'].toString() + " " + item['mov'];
+      } else if (item['seconds'] != null) {
+        description = description + item['seconds'].toString() + " second " + item['mov'];
+      }
       description = description + '\n';
     }
     return description;
@@ -239,12 +243,19 @@ class AMRAPWorkout extends Workout{
 
   List<Row> getWorkoutUpdateForm() {
     return this.round.map((Map<String, dynamic> mov) {
-      var children = [
-        workoutInputBox(mov[REPS_KEY].toString(), (String value) {
+      var children = [];
+      if (mov[REPS_KEY] != null) {
+        children = children + [ workoutInputBox(mov[REPS_KEY].toString(), (String value) {
           mov[REPS_KEY] = value;
-        }),
-        Text(mov[MOVEMENT_KEY], style : globalTextStyle)
-      ];
+        })];
+      } else if (mov["seconds"] != null) {
+        children = children + [ workoutInputBox(mov["seconds"].toString(), (String value) {
+          mov["seconds"] = value;
+        })];
+      }
+
+      children = children + [ Text(mov[MOVEMENT_KEY], style : globalTextStyle) ];
+
       if(mov[WEIGHT_KEY] != null) {
         children = children + [
           workoutInputBox(mov[WEIGHT_KEY].toString(), (String value) {
