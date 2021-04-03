@@ -124,6 +124,7 @@ class _MyAppState extends State<MyApp> {
 
 Model model = Model();
 TextStyle globalTextStyle = TextStyle(fontSize: 18);
+TextStyle fallbackTextStyle = TextStyle(fontSize: 18, color: Colors.grey[400]);
 
 class WodStatefulWidget extends StatefulWidget {
   WodStatefulWidget({Key key}) : super(key: key);
@@ -158,7 +159,7 @@ class _WodStatefulWidgetState extends State<WodStatefulWidget> {
   Text generateDescription() {
     print(model.wod);
     var description = model.wod.workout.getDescription();
-    if (description != null) {
+    if (description.isNotEmpty) {
       return Text(description,
           style: globalTextStyle);
     } else {
@@ -377,12 +378,13 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.start,
             children : [
-              Container(padding : EdgeInsets.all(10),child : Text('Scores', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 25))),
+              Container(padding : EdgeInsets.all(10),child : Text('Scores', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 20))),
               scoreBuilder(fetch_scores(getDisplayDate())),
-              Padding(
+              Center(child :Padding(
                   padding: const EdgeInsets.all(10.0),
                   child : IconButton(icon: Icon(CupertinoIcons.plus_circle), onPressed: _pushSaved)
-              ),
+              )),
+              Container(padding : EdgeInsets.all(10),child : Text('Previous scores', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 20))),
               scoreBuilder(fetch_customer_scores(getDisplayDate(), model.wod.workout.id))
             ]
 
@@ -393,50 +395,84 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
     return FutureBuilder<List<Score>>(
         future: future,
         builder: (context, snapshot) {
+          var tiles;
           if (snapshot.hasData) {
-            final tiles = snapshot.data.map(
-                  (Score score) {
-                return Card(child : ListTile(
-                  dense: true,
-                  title: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children : [
-                        Expanded(child : Container(
-                            width : 150,
-                            padding : EdgeInsets.symmetric(horizontal: 5),
-                            child : Text(
-                              score.first_name??'',
-                              style: globalTextStyle,
-                            ))),
-                        Expanded(child : Container(
-                            width : 150,
-                            padding : EdgeInsets.symmetric(horizontal: 5),
-                            child : Text(
-                              Workout.parseScore(score),
-                              style: globalTextStyle,
-                            ))),
-                        Expanded(child : Container(
-                            width : 150,
-                            padding : EdgeInsets.symmetric(horizontal: 5),
-                            child : Text(
-                              score.date??'',
-                              style: globalTextStyle,
-                            )))
-                      ]
-                  ),
-                ));
-              },
-            );
-            final divided = ListTile.divideTiles(
-              context: context,
-              tiles: tiles,
-            ).toList();
-            return Column(children : [
-              ListView(children : divided, shrinkWrap: true)
+            if (snapshot.data.isEmpty) {
+              tiles = [ Card(child : ListTile(
+                dense: true,
+                title: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children : [
+                      Expanded(child : Container(
+                          width : 150,
+                          padding : EdgeInsets.symmetric(horizontal: 5),
+                          child : Text(
+                            'Nothing to see here',
+                            style: fallbackTextStyle,
+                          )))
+                    ]
+                ),
+              ))];
+            } else {
+              tiles = snapshot.data.map(
+                    (Score score) {
+                  return Card(child : ListTile(
+                    dense: true,
+                    title: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children : [
+                          Expanded(child : Container(
+                              width : 150,
+                              padding : EdgeInsets.symmetric(horizontal: 5),
+                              child : Text(
+                                score.first_name??'',
+                                style: globalTextStyle,
+                              ))),
+                          Expanded(child : Container(
+                              width : 150,
+                              padding : EdgeInsets.symmetric(horizontal: 5),
+                              child : Text(
+                                Workout.parseScore(score),
+                                style: globalTextStyle,
+                              ))),
+                          Expanded(child : Container(
+                              width : 150,
+                              padding : EdgeInsets.symmetric(horizontal: 5),
+                              child : Text(
+                                score.date??'',
+                                style: globalTextStyle,
+                              )))
+                        ]
+                      ),
+                    ));
+                  },
+                );
+              }
+
+              final divided = ListTile.divideTiles(
+                context: context,
+                tiles: tiles,
+              ).toList();
+              return Column(children : [
+                ListView(children : divided, shrinkWrap: true)
               ]
-            );
+              );
           } else if (snapshot.hasError) {
-            return Text("${snapshot.error}");
+            return Card(child : ListTile(
+              dense: true,
+              title: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children : [
+                    Expanded(child : Container(
+                        width : 150,
+                        padding : EdgeInsets.symmetric(horizontal: 5),
+                        child : Text(
+                          'Nothing to see here',
+                          style: globalTextStyle,
+                        ))),
+                  ]
+              ),
+            ));
           }
 
           // By default, s  how a loading spinner.
