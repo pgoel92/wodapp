@@ -13,6 +13,7 @@ double mainWidth = 1000.0;
 DateTime date = DateTime.now();
 int daysAgo = 0;
 MaterialApp homePage;
+Color iconColor = Colors.blue.shade300;
 
 String getDisplayDate() {
   return DateFormat('yyyy-MM-dd').format(date.subtract(new Duration(days: daysAgo)));
@@ -84,6 +85,7 @@ class _MyAppState extends State<MyApp> {
                                             Expanded(child: IconButton(icon: Icon(IconData(
                                                 0xe5a8, fontFamily: 'MaterialIcons',
                                                 matchTextDirection: true)),
+                                                color: iconColor,
                                                 onPressed: _subtractDate)),
                                             Text(DateFormat.yMMMMEEEEd().format(
                                                 date.subtract(new Duration(days: daysAgo))),
@@ -91,7 +93,9 @@ class _MyAppState extends State<MyApp> {
                                                     fontWeight: FontWeight.bold, fontSize: 22.0)),
                                             Expanded(child: IconButton(icon: Icon(IconData(
                                                 0xe5b0, fontFamily: 'MaterialIcons',
-                                                matchTextDirection: true)), onPressed: _addDate))
+                                                matchTextDirection: true)),
+                                                color: iconColor,
+                                                onPressed: _addDate))
                                           ]
                                       )
                                   ),
@@ -334,7 +338,8 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
                       child: Text('Submit',
                         style: TextStyle(
                           fontWeight: FontWeight.w400,
-                        ),)
+                        ),),
+                      color: iconColor
                   )))
     ]));
   }
@@ -382,7 +387,7 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
               scoreBuilder(fetch_scores(getDisplayDate())),
               Center(child :Padding(
                   padding: const EdgeInsets.all(10.0),
-                  child : IconButton(icon: Icon(CupertinoIcons.plus_circle), onPressed: _pushSaved)
+                  child : IconButton(icon: Icon(CupertinoIcons.plus_circle), color: iconColor, onPressed: _pushSaved)
               )),
               Container(padding : EdgeInsets.all(10),child : Text('Previous scores', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 20))),
               scoreBuilder(fetch_customer_scores(getDisplayDate(), model.wod.workout.id))
