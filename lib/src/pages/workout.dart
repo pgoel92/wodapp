@@ -228,7 +228,7 @@ class AMRAPWorkout extends Workout{
   }
 
   String getDescription() {
-    var description = 'AMRAP :\n';
+    var description = 'AMRAP :\n\n';
     for (var i = 0; i < this.round.length; i++) {
       var item = this.round[i];
       if (item['n_reps'] != null) {
@@ -324,7 +324,7 @@ class ForTimeWorkout extends Workout {
   }
 
   String getDescription() {
-    var description = 'For time:\n';
+    var description = 'For time:\n\n';
     for (var i = 0; i < this.round.length; i++) {
         var item = this.round[i];
         description = description + item['n_reps'].toString() + " " + item['mov'];
