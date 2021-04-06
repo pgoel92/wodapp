@@ -78,12 +78,11 @@ class Model {
 
 class Workout {
   int id;
-  Map<String, dynamic> description;
   List<Map<String, dynamic>> round;
   String type;
   String name;
 
-  Workout({this.id, this.description, this.round, this.type, this.name});
+  Workout({this.id, this.round, this.type, this.name});
 
   factory Workout.fromJson(Map<String, dynamic> json) {
     switch(json['type']) {
@@ -93,7 +92,6 @@ class Workout {
     }
     return Workout(
         id: json['id'] ?? -1,
-        description: Map<String, String>.from(json['description'] ?? {'rx' :'Nothing to see here'}),
         round: List<Map<String, dynamic>>.from(json['round'] ?? []),
         type: json['type'],
         name: json['name']
@@ -103,7 +101,6 @@ class Workout {
   Map<String, dynamic> toJson() {
     return {
       "id" : id,
-      "description" : description,
       "round" : round,
       "type" : type,
       "name" : name
@@ -186,10 +183,9 @@ TextStyle scoreTextStyle = TextStyle(fontSize: 28, fontWeight: FontWeight.bold);
 class AMRAPWorkout extends Workout{
   int time;
 
-  AMRAPWorkout(int id, Map<String, dynamic> description, List<Map<String, dynamic>> round, String type, String name, int time) {
+  AMRAPWorkout(int id, List<Map<String, dynamic>> round, String type, String name, int time) {
     this.id = id;
     this.time = time;
-    this.description = description;
     this.round = round;
     this.type = type;
     this.name = name;
@@ -198,7 +194,6 @@ class AMRAPWorkout extends Workout{
   factory AMRAPWorkout.fromJson(Map<String, dynamic> json) {
     return AMRAPWorkout(
         json['id'] ?? -1,
-        Map<String, String>.from(json['description'] ?? {'rx' :'Nothing to see here'}),
         List<Map<String, dynamic>>.from(json['round'] ?? []),
         json['type'],
         json['name'],
@@ -209,7 +204,6 @@ class AMRAPWorkout extends Workout{
   Map<String, dynamic> toJson() {
     return {
       "id" : id,
-      "description" : description,
       "round" : round,
       "type" : type,
       "time" : time,
@@ -272,10 +266,9 @@ class AMRAPWorkout extends Workout{
 class ForTimeWorkout extends Workout {
   int n_rounds;
 
-  ForTimeWorkout(int id, Map<String, dynamic> description, List<Map<String, dynamic>> round, String type, String name, int n_rounds) {
+  ForTimeWorkout(int id, List<Map<String, dynamic>> round, String type, String name, int n_rounds) {
     this.id = id;
     this.n_rounds = n_rounds;
-    this.description = description;
     this.round = round;
     this.type = type;
     this.name = name;
@@ -284,7 +277,6 @@ class ForTimeWorkout extends Workout {
   factory ForTimeWorkout.fromJson(Map<String, dynamic> json) {
     return ForTimeWorkout(
         json['id'] ?? -1,
-        Map<String, String>.from(json['description'] ?? {'rx' :'Nothing to see here'}),
         List<Map<String, dynamic>>.from(json['round'] ?? []),
         json['type'],
         json['name'],
@@ -295,7 +287,6 @@ class ForTimeWorkout extends Workout {
   Map<String, dynamic> toJson() {
     return {
       "id" : id,
-      "description" : description,
       "round" : round,
       "type" : type,
       "n_rounds" : n_rounds,
@@ -357,21 +348,22 @@ class ForTimeWorkout extends Workout {
 }
 
 class TwentyOne_Fifteen_Nine extends Workout {
+  List<int> n_reps;
 
-  TwentyOne_Fifteen_Nine(int id, Map<String, dynamic> description, List<Map<String, dynamic>> round, String type, String name) {
+  TwentyOne_Fifteen_Nine(int id, List<Map<String, dynamic>> round, String type, List<int> n_reps, String name) {
     this.id = id;
-    this.description = description;
     this.round = round;
     this.type = type;
+    this.n_reps = n_reps;
     this.name = name;
   }
 
   factory TwentyOne_Fifteen_Nine.fromJson(Map<String, dynamic> json) {
     return TwentyOne_Fifteen_Nine(
         json['id'] ?? -1,
-        Map<String, String>.from(json['description'] ?? {'rx' :'Nothing to see here'}),
         List<Map<String, dynamic>>.from(json['round'] ?? []),
         json['type'],
+        List<int>.from(json['n_reps']),
         json['name']
     );
   }
@@ -379,10 +371,10 @@ class TwentyOne_Fifteen_Nine extends Workout {
   Map<String, dynamic> toJson() {
     return {
       "id" : id,
-      "description" : description,
       "round" : round,
       "type" : type,
-      "name" : name
+      "name" : name,
+      "n_reps" : n_reps
     };
   }
 
@@ -397,32 +389,36 @@ class TwentyOne_Fifteen_Nine extends Workout {
   }
 
   String getDescription() {
-    var description = '21-15-9 reps of :\n';
+    var description = n_reps.join("-") + ' reps of :\n';
     for (var i = 0; i < this.round.length; i++) {
       var item = this.round[i];
       description = description + item['mov'];
+      if (item['weight_m'] != null && item['weight_f'] != null) {
+        description = description + " (" + item['weight_m'].toString() + "/" + item['weight_f'].toString() + ")";
+      }
       description = description + '\n';
     }
     return description;
   }
 
   List<Row> getWorkoutUpdateForm() {
-    return this.round.map((Map<String, dynamic> mov) {
-      var children = [
-        workoutInputBox(mov[REPS_KEY].toString(), (String value) {
-          mov[REPS_KEY] = value;
-        }),
-        Text(mov[MOVEMENT_KEY], style : globalTextStyle)
-      ];
+    var children = <Widget>[];
+    for (var i=0;i<this.n_reps.length;i++) {
+      children.add(workoutInputBox(this.n_reps[i].toString(), (String value) {
+        this.n_reps[i] = int.parse(value);
+      }));
+    }
+    var rows = [Row(children : children)];
+    rows = rows + this.round.map((Map<String, dynamic> mov) {
+      var children = <Widget>[];
+      children.add(Text(mov[MOVEMENT_KEY], style : globalTextStyle));
       if(mov[WEIGHT_KEY] != null) {
-        children = children + [
-          workoutInputBox(mov[WEIGHT_KEY].toString(), (String value) {
+        children.add(workoutInputBox(mov[WEIGHT_KEY].toString(), (String value) {
             mov[WEIGHT_KEY] = value;
-          }),
-          Text('lbs', style : globalTextStyle)
-        ];
+          }));
       }
       return Row(children : children);
     }).toList();
+    return rows;
   }
 }
