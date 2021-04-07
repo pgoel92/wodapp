@@ -66,6 +66,30 @@ Future<List<Score>> fetch_scores(date) async {
   }
 }
 
+Future<List<Workout>> search_workout(searchKeyword) async {
+  print('Fetching workouts with ${searchKeyword}');
+  try {
+    final response = await http.get('http://127.0.0.1:5000/workouts?keyword=$searchKeyword');
+    if (response.statusCode == 200) {
+      // If the server did return a 200 OK response,
+      // then parse the JSON.
+      var results_json = json.decode(response.body);
+      print(results_json);
+      List<Workout> workouts = [];
+      for (var i = 0; i < results_json.length; i++) {
+        workouts.add(Workout.fromJson(results_json[i]));
+      }
+      return workouts;
+    } else {
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to load scores');
+    }
+  } on Exception {
+    return [];
+  }
+}
+
 Future<List<Score>> fetch_customer_scores(date, workout_id) async {
   print('Fetching scores for workout_id ${workout_id}');
   try {

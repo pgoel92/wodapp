@@ -48,6 +48,25 @@ Scaffold scorePage = Scaffold(
           )),
     )));
 
+Scaffold newWodPage = Scaffold(
+    appBar: AppBar(
+      title: appTitle,
+    ),
+    body: SingleChildScrollView(child : Center(
+      child : Container(
+          padding : EdgeInsets.symmetric(vertical : verticalPadding),
+          child : SizedBox(
+              width : mainWidth,
+              child : Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children : [
+                    Container(padding : EdgeInsets.all(10),child : Text('Add workout of the day', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 25))),
+                    WodSearchWidget()
+                  ]
+              )
+          )),
+    )));
+
 class _MyAppState extends State<MyApp> {
 
   @override
@@ -155,13 +174,16 @@ class _WodStatefulWidgetState extends State<WodStatefulWidget> {
             child : Container(
               padding : EdgeInsets.all(20.0),
               child : generateDescription()
-        ))
+        )),
+          Center(child :Padding(
+              padding: const EdgeInsets.all(10.0),
+              child : IconButton(icon: Icon(CupertinoIcons.plus_circle), color: iconColor, onPressed: _pushSaved)
+          ))
       ]
     );
   }
 
   Text generateDescription() {
-    print(model.wod);
     var description = model.wod.workout.getDescription();
     if (description.isNotEmpty) {
       return Text(description,
@@ -169,6 +191,17 @@ class _WodStatefulWidgetState extends State<WodStatefulWidget> {
     } else {
       return Text("Rest day", style: globalTextStyle);
     }
+  }
+
+  void _pushSaved() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        // NEW lines from here...
+        builder: (BuildContext context) {
+          return newWodPage;
+        }, // ...to here.
+      ),
+    );
   }
 }
 
@@ -246,6 +279,88 @@ class _WodUpdateWidgetState extends State<WodUpdateWidget> {
     return Column(children : rows);
   }
 }
+
+class WodSearchWidget extends StatefulWidget {
+  WodSearchWidget({Key key}) : super(key: key);
+
+  @override
+  _WodSearchWidgetState createState() => _WodSearchWidgetState();
+}
+
+class _WodSearchWidgetState extends State<WodSearchWidget> {
+
+  List<bool> isRxSelected = [true, false];
+  bool isEdit = false;
+  String searchKeyword;
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Card(
+                  child : Form(
+                      key: _formKey,
+                      child: Container(
+                          padding : EdgeInsets.all(20.0),
+                          child : globalTextFormField("Enter a movement", (String value) {searchKeyword = value;})
+                      ))),
+          Center(
+              child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child :RaisedButton(
+                      padding: EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 10,
+                      ),
+                      onPressed: () {
+                        // Validate will return true if the form is valid, or false if
+                        // the form is invalid.
+                        if (_formKey.currentState.validate()) {
+                          // Process data.
+                          _formKey.currentState.save();
+                          setState(() {
+
+                          });
+                        }
+                      },
+                      child: Text('Submit',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w400,
+                        ),),
+                      color: iconColor
+                  ))),
+          Card(child : getSearchResults())
+        ]
+    );
+  }
+
+  Container getSearchResults() {
+    if (searchKeyword != null) {
+      return Container(child : FutureBuilder<List<Workout>>(
+          future: search_workout(searchKeyword),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return GridView.count(shrinkWrap: true, crossAxisCount: 2, children : snapshot.data.map((Workout w) {return Card(child : Text(w.getDescription()));}).toList());
+            } else if (snapshot.hasError) {
+              return Text("${snapshot.error}");
+            }
+
+            // By default, s  how a loading spinner.
+            return CircularProgressIndicator();
+          }));
+    } else {
+      return Container();
+    }
+  }
+}
+
 
 class AddScoreWidget extends StatefulWidget {
   AddScoreWidget({Key key}) : super(key: key);
