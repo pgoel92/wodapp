@@ -74,7 +74,6 @@ Future<List<Workout>> search_workout(searchKeyword) async {
       // If the server did return a 200 OK response,
       // then parse the JSON.
       var results_json = json.decode(response.body);
-      print(results_json);
       List<Workout> workouts = [];
       for (var i = 0; i < results_json.length; i++) {
         workouts.add(Workout.fromJson(results_json[i]));
@@ -113,9 +112,9 @@ Future<List<Score>> fetch_customer_scores(date, workout_id) async {
   }
 }
 
-Future<http.Response> put_data(Map<String, dynamic> body) async {
+Future<http.Response> put_data(String path, Map<String, dynamic> body) async {
   print('Putting data');
-  return http.post('http://127.0.0.1:5000/customers/ABC',
+  return http.post('http://127.0.0.1:5000/' + path,
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
     },
@@ -123,8 +122,22 @@ Future<http.Response> put_data(Map<String, dynamic> body) async {
   );
 }
 
+Future<void> put_wod(date, id) async {
+  print('Putting wod ${id} for ${date}');
+  final http.Response response = await put_data('wod', {'id': id, 'date': date});
+  if (response.statusCode == 201) {
+    // If the server did return a 201 CREATED response,
+    // then parse the JSON.
+    return;
+  } else {
+    // If the server did not return a 201 CREATED response,
+    // then throw an exception.
+    throw Exception('Failed to put score');
+  }
+}
+
 Future<void> put_score(Model data) async {
-  final http.Response response = await put_data({'program_id': data.wod.id, 'athlete_id': data.athlete_id, 'scaled_wod' : data.updatedWod.workout.toJson(), 'score': data.score, 'notes': data.notes});
+  final http.Response response = await put_data('customers/ABC', {'program_id': data.wod.id, 'athlete_id': data.athlete_id, 'scaled_wod' : data.updatedWod.workout.toJson(), 'score': data.score, 'notes': data.notes});
   if (response.statusCode == 201) {
     // If the server did return a 201 CREATED response,
     // then parse the JSON.

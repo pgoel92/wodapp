@@ -201,7 +201,7 @@ class _WodStatefulWidgetState extends State<WodStatefulWidget> {
           return newWodPage;
         }, // ...to here.
       ),
-    );
+    ).then((dynamic value) {setState(() {});});
   }
 }
 
@@ -325,9 +325,7 @@ class _WodSearchWidgetState extends State<WodSearchWidget> {
                         if (_formKey.currentState.validate()) {
                           // Process data.
                           _formKey.currentState.save();
-                          setState(() {
-
-                          });
+                          setState(() {});
                         }
                       },
                       child: Text('Submit',
@@ -336,7 +334,7 @@ class _WodSearchWidgetState extends State<WodSearchWidget> {
                         ),),
                       color: iconColor
                   ))),
-          Card(child : getSearchResults())
+          getSearchResults()
         ]
     );
   }
@@ -347,7 +345,23 @@ class _WodSearchWidgetState extends State<WodSearchWidget> {
           future: search_workout(searchKeyword),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              return GridView.count(shrinkWrap: true, crossAxisCount: 2, children : snapshot.data.map((Workout w) {return Card(child : Text(w.getDescription()));}).toList());
+              return GridView.count(shrinkWrap: true, crossAxisCount: 2, children : snapshot.data.map((Workout w) {
+                return Card(child : Container(padding: EdgeInsets.all(20.0),
+                    child : Column(children : [
+                      Text(w.getDescription()),
+                    RaisedButton(
+                        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                        onPressed: () {
+                          put_wod(getDisplayDate(), w.id);
+                          Navigator.of(context).pop();
+                          },
+                        child: Text('Select',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w400,
+                          ),),
+                        color: iconColor)
+                    ])));
+              }).toList());
             } else if (snapshot.hasError) {
               return Text("${snapshot.error}");
             }
@@ -421,7 +435,6 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
                 } else if (snapshot.hasError) {
                   return Text("${snapshot.error}");
                 }
-
                 // By default, s  how a loading spinner.
                 return CircularProgressIndicator();
               }),
@@ -429,25 +442,17 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
           Center(
               child: Padding(
                   padding: const EdgeInsets.all(10.0),
-                  child :RaisedButton(
+                  child: RaisedButton(
                       padding: EdgeInsets.symmetric(
                         vertical: 10,
                         horizontal: 10,
                       ),
                       onPressed: () {
-                        // Validate will return true if the form is valid, or false if
-                        // the form is invalid.
+                        // Validate will return true if the form is valid, or false if the form is invalid.
                         if (_formKey.currentState.validate()) {
-                          // Process data.
                           _formKey.currentState.save();
                           put_score(model);
-                          Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                // NEW lines from here...
-                                  builder: (BuildContext context) {
-                                    return homePage;
-                                  })
-                          );
+                          Navigator.of(context).pop();
                         }
                       },
                       child: Text('Submit',
@@ -609,7 +614,7 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
           return scorePage;
         }, // ...to here.
       ),
-    );
+    ).then((dynamic value) {setState(() {});});;
   }
 
 }
