@@ -10,10 +10,12 @@ import './src/utils/utils.dart';
 Text appTitle = Text('Workout of the Day',  style : TextStyle(fontWeight: FontWeight.bold, fontSize: 25));
 double verticalPadding = 20.0;
 double mainWidth = 1000.0;
-DateTime date = DateTime.now();
 int daysAgo = 0;
-MaterialApp homePage;
+DateTime date = DateTime.now();
 Color iconColor = Colors.blue.shade300;
+Model model = Model();
+TextStyle globalTextStyle = TextStyle(fontSize: 18);
+TextStyle fallbackTextStyle = TextStyle(fontSize: 18, color: Colors.grey[400]);
 
 String getDisplayDate() {
   return DateFormat('yyyy-MM-dd').format(date.subtract(new Duration(days: daysAgo)));
@@ -21,11 +23,6 @@ String getDisplayDate() {
 
 void main() {
   runApp(MyApp());
-}
-
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => _MyAppState();
 }
 
 Scaffold scorePage = Scaffold(
@@ -67,11 +64,16 @@ Scaffold newWodPage = Scaffold(
           )),
     )));
 
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
 class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    homePage = MaterialApp(
+    return MaterialApp(
         title: 'Workout of the Day',
         //theme: ThemeData(          // Add the 3 lines from here...
         //  primaryColor: Colors.white,
@@ -80,7 +82,19 @@ class _MyAppState extends State<MyApp> {
           brightness: Brightness.dark,
           /* dark theme settings */
         ),
-        home: Scaffold(
+        home: HomePageWidget());
+  }
+}
+
+class HomePageWidget extends StatefulWidget {
+  @override
+  _HomePageWidgetState createState() => _HomePageWidgetState();
+}
+
+class _HomePageWidgetState extends State<HomePageWidget> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
             appBar: AppBar(
               title: appTitle,
             ),
@@ -119,6 +133,10 @@ class _MyAppState extends State<MyApp> {
                                       )
                                   ),
                                   WodStatefulWidget(),
+                                  Center(child :Padding(
+                                      padding: const EdgeInsets.all(10.0),
+                                      child : IconButton(icon: Icon(CupertinoIcons.plus_circle), color: iconColor, onPressed: _pushSaved)
+                                  )),
                                   ListScoresWidget()
                                 ]
                             );
@@ -130,8 +148,7 @@ class _MyAppState extends State<MyApp> {
                           return Center(child: CircularProgressIndicator(strokeWidth: 4.0));
                         })
                 ))),
-            )));
-    return homePage;
+            ));
   }
 
   void _subtractDate () {
@@ -140,14 +157,19 @@ class _MyAppState extends State<MyApp> {
   void _addDate () {
     setState(() { daysAgo = daysAgo - 1; });
   }
+
+  void _pushSaved() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        // NEW lines from here...
+        builder: (BuildContext context) {
+          return newWodPage;
+        }, // ...to here.
+      ),
+    ).then((dynamic value) {setState(() {});});
+  }
 }
 
-
-
-
-Model model = Model();
-TextStyle globalTextStyle = TextStyle(fontSize: 18);
-TextStyle fallbackTextStyle = TextStyle(fontSize: 18, color: Colors.grey[400]);
 
 class WodStatefulWidget extends StatefulWidget {
   WodStatefulWidget({Key key}) : super(key: key);
@@ -174,11 +196,7 @@ class _WodStatefulWidgetState extends State<WodStatefulWidget> {
             child : Container(
               padding : EdgeInsets.all(20.0),
               child : generateDescription()
-        )),
-          Center(child :Padding(
-              padding: const EdgeInsets.all(10.0),
-              child : IconButton(icon: Icon(CupertinoIcons.plus_circle), color: iconColor, onPressed: _pushSaved)
-          ))
+        ))
       ]
     );
   }
@@ -193,16 +211,6 @@ class _WodStatefulWidgetState extends State<WodStatefulWidget> {
     }
   }
 
-  void _pushSaved() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        // NEW lines from here...
-        builder: (BuildContext context) {
-          return newWodPage;
-        }, // ...to here.
-      ),
-    ).then((dynamic value) {setState(() {});});
-  }
 }
 
 class WodUpdateWidget extends StatefulWidget {
