@@ -17,6 +17,11 @@ class Program {
 
   Program({this.id, this.workout});
 
+  Program.empty() {
+    this.id = -1;
+    this.workout = Workout();
+  }
+
   factory Program.fromJson(Map<String, dynamic> json) {
     return Program(
         id: json['id'] ?? -1,
@@ -35,6 +40,14 @@ class Program {
     this.id = p.id;
     this.workout = Workout.fromWorkout(p.workout);
   }
+
+  String getDescription() {
+    if (this.workout != null && this.workout.getDescription().isNotEmpty) {
+      return this.workout.getDescription();
+    }
+    return "Rest day";
+  }
+
 }
 
 class Score {
@@ -91,6 +104,10 @@ class Workout {
   String name;
 
   Workout({this.id, this.round, this.type, this.name});
+
+  Workout.empty() {
+    this.id = -1;
+  }
 
   factory Workout.fromJson(Map<String, dynamic> json) {
     switch(json['type']) {

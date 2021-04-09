@@ -202,13 +202,8 @@ class _WodStatefulWidgetState extends State<WodStatefulWidget> {
   }
 
   Text generateDescription() {
-    var description = model.wod.workout.getDescription();
-    if (description.isNotEmpty) {
-      return Text(description,
+    return Text(model.wod.getDescription(),
           style: globalTextStyle);
-    } else {
-      return Text("Rest day", style: globalTextStyle);
-    }
   }
 
 }
@@ -253,19 +248,12 @@ class _WodUpdateWidgetState extends State<WodUpdateWidget> {
     var children;
     if (model.updatedWod == null) {
       model.updatedWod = Program.fromProgram(model.wod);
-      //model.updatedWod = model.wod;
     }
 
     if (isEdit) {
       children = [ Container(padding : EdgeInsets.all(10.0), child : workoutForm()) ];
     } else {
-      var description = model.updatedWod.workout.getDescription();
-
-      if (description != null) {
-        children = [ Text(description, style: globalTextStyle)];
-      } else {
-        children = [ Text("Rest day", style: globalTextStyle)];
-      }
+      children = [ Text(model.updatedWod.getDescription(), style: globalTextStyle)];
     }
 
     return Column(
