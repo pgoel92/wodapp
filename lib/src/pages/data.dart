@@ -137,7 +137,7 @@ Future<void> put_wod(date, id) async {
 }
 
 Future<void> put_score(Model data) async {
-  final http.Response response = await put_data('customers/ABC', {'program_id': data.wod.id, 'athlete_id': data.athlete_id, 'scaled_wod' : data.updatedWod.workout.toJson(), 'score': data.score, 'notes': data.notes});
+  final http.Response response = await put_data('customers/ABC', {'program_id': data.wod.id, 'athlete_id': data.athlete_id, 'scaled_wod' : data.updatedWod.workout.toJson(), 'score': data.score, 'notes': data.notes, 'is_rx' : data.is_rx});
   if (response.statusCode == 201) {
     // If the server did return a 201 CREATED response,
     // then parse the JSON.

@@ -107,7 +107,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
                             var data = snapshot.data;
-                            model.wod = model.updatedWod = data;
+                            model.wod = data;
                             return Column(
                                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                 children: [
@@ -251,15 +251,16 @@ class _WodUpdateWidgetState extends State<WodUpdateWidget> {
 
   Column workoutEditColumn() {
     var children;
+    if (model.updatedWod == null) {
+      model.updatedWod = Program.fromProgram(model.wod);
+      //model.updatedWod = model.wod;
+    }
+
     if (isEdit) {
       children = [ Container(padding : EdgeInsets.all(10.0), child : workoutForm()) ];
     } else {
-      var description;
-      if (model.updatedWod != null) {
-        description = model.updatedWod.workout.getDescription();
-      } else {
-        description = model.wod.workout.getDescription();
-      }
+      var description = model.updatedWod.workout.getDescription();
+
       if (description != null) {
         children = [ Text(description, style: globalTextStyle)];
       } else {
@@ -274,12 +275,7 @@ class _WodUpdateWidgetState extends State<WodUpdateWidget> {
   }
 
   Column workoutForm() {
-    Program wod = model.wod;
-    if (model.updatedWod == null) {
-      model.updatedWod = model.wod;
-    }
-
-    if (wod.workout.round == null || wod.workout.round.isEmpty) {
+    if (model.wod.workout.round == null || model.wod.workout.round.isEmpty) {
       return Column(children : [Container(padding : EdgeInsets.all(20.0),child : Text("All good :)", style : globalTextStyle))]);
     }
     List<Row> rows = model.updatedWod.workout.getWorkoutUpdateForm();
@@ -328,10 +324,7 @@ class _WodSearchWidgetState extends State<WodSearchWidget> {
                         horizontal: 10,
                       ),
                       onPressed: () {
-                        // Validate will return true if the form is valid, or false if
-                        // the form is invalid.
                         if (_formKey.currentState.validate()) {
-                          // Process data.
                           _formKey.currentState.save();
                           setState(() {});
                         }
@@ -456,9 +449,9 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
                         horizontal: 10,
                       ),
                       onPressed: () {
-                        // Validate will return true if the form is valid, or false if the form is invalid.
                         if (_formKey.currentState.validate()) {
                           _formKey.currentState.save();
+                          model.is_rx = (model.wod.workout == model.updatedWod.workout);
                           put_score(model);
                           Navigator.of(context).pop();
                         }
@@ -475,7 +468,7 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
   Column scoreForm() {
     Program wod = model.wod;
     if (model.updatedWod == null) {
-      model.updatedWod = model.wod;
+      model.updatedWod = Program.fromProgram(model.wod);
     }
     if (wod.workout.round == null || wod.workout.round.isEmpty) {
       return Column(children : [Container(padding : EdgeInsets.all(20.0),child : Text("All good :)", style : globalTextStyle))]);
@@ -565,7 +558,14 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
                               width : 150,
                               padding : EdgeInsets.symmetric(horizontal: 5),
                               child : Text(
-                                Workout.parseScore(score),
+                                Workout.parseScore(score, model.wod),
+                                style: globalTextStyle,
+                              ))),
+                          Expanded(child : Container(
+                              width : 150,
+                              padding : EdgeInsets.symmetric(horizontal: 5),
+                              child : Text(
+                                Workout.rx_or_scaled(score, model.wod),
                                 style: globalTextStyle,
                               ))),
                           Expanded(child : Container(

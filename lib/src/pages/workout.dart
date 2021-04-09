@@ -1,5 +1,7 @@
 import 'package:agora_flutter_quickstart/main.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:collection/collection.dart';
 
 import '../utils/utils.dart';
 
@@ -10,8 +12,8 @@ var MOVEMENT_KEY = "mov";
 var WEIGHT_KEY = "weight_m";
 
 class Program {
-  final int id;
-  final Workout workout;
+  int id;
+  Workout workout;
 
   Program({this.id, this.workout});
 
@@ -27,6 +29,11 @@ class Program {
       "id" : id,
       "workout" : workout.toJson()
     };
+  }
+
+  Program.fromProgram(Program p) {
+    this.id = p.id;
+    this.workout = Workout.fromWorkout(p.workout);
   }
 }
 
@@ -62,6 +69,7 @@ class Model {
   int athlete_id;
   dynamic score;
   String notes;
+  bool is_rx;
 
   Model({this.athlete_id, this.score, this.notes, this.wod, this.updatedWod});
 
@@ -115,15 +123,27 @@ class Workout {
     return '';
   }
 
-  static String parseScore(Score score) {
+  static String parseScore(Score score, Program wod) {
     switch(score.type) {
       case "amrap": {
         return score.score['rounds'].toString() + " + " + score.score['reps'].toString();
       }
       case "for_time": {
+        var f = new NumberFormat("00", "en_US");
+        return score.score['mins'].toString() + " : " + f.format(score.score['seconds']).toString();
+      }
+      case "21-15-9": {
+        var f = new NumberFormat("00", "en_US");
         return score.score['mins'].toString() + " : " + score.score['seconds'].toString();
       }
-      case "21-15-9": {return score.score['mins'].toString() + " : " + score.score['seconds'].toString(); }
+    }
+  }
+
+  static String rx_or_scaled(Score score, Program wod) {
+    if (score.is_rx) {
+      return "Rx";
+    } else {
+      return "";
     }
   }
 
@@ -145,6 +165,18 @@ class Workout {
       }
       return Row(children : children);
     }).toList();
+  }
+
+  factory Workout.fromWorkout(Workout w) {
+    switch(w.type) {
+      case "for_time": {return ForTimeWorkout.fromWorkout(w);}
+    }
+    return Workout(
+        id: w.id,
+        round: w.round,
+        type: w.type,
+        name: w.name
+    );
   }
 }
 
@@ -344,7 +376,23 @@ class ForTimeWorkout extends Workout {
     }).toList();
   }
 
+  ForTimeWorkout.fromWorkout(ForTimeWorkout w) {
+    this.id = w.id;
+    this.round = w.round.map((Map<String, dynamic> item) {return new Map<String, dynamic>.from(item);}).toList();
+    this.type = w.type;
+    this.name = w.name;
+    this.n_rounds = w.n_rounds;
+  }
 
+  @override
+  bool operator ==(other) {
+    Function deepEq = const DeepCollectionEquality().equals;
+    return (other is ForTimeWorkout)
+        && other.id == this.id
+        && other.type == this.type
+        && other.n_rounds == this.n_rounds
+        && deepEq(other.round, this.round);
+  }
 }
 
 class TwentyOne_Fifteen_Nine extends Workout {
