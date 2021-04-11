@@ -267,7 +267,6 @@ class _WodUpdateWidgetState extends State<WodUpdateWidget> {
       return Column(children : [Container(padding : EdgeInsets.all(20.0),child : Text("All good :)", style : globalTextStyle))]);
     }
     List<Row> rows = model.updatedWod.workout.getWorkoutUpdateForm();
-
     return Column(children : rows);
   }
 }

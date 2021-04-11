@@ -187,6 +187,7 @@ class Workout {
   factory Workout.fromWorkout(Workout w) {
     switch(w.type) {
       case "for_time": {return ForTimeWorkout.fromWorkout(w);}
+      case "amrap": {return AMRAPWorkout.fromWorkout(w);}
     }
     return Workout(
         id: w.id,
@@ -271,7 +272,7 @@ class AMRAPWorkout extends Workout{
   }
 
   String getDescription() {
-    var description = 'AMRAP :\n\n';
+    var description = 'AMRAP in ${this.time} mins of :\n\n';
     for (var i = 0; i < this.round.length; i++) {
       var item = this.round[i];
       if (item['n_reps'] != null) {
@@ -286,7 +287,7 @@ class AMRAPWorkout extends Workout{
 
   List<Row> getWorkoutUpdateForm() {
     return this.round.map((Map<String, dynamic> mov) {
-      var children = [];
+      var children = <Widget>[];
       if (mov[REPS_KEY] != null) {
         children = children + [ workoutInputBox(mov[REPS_KEY].toString(), (String value) {
           mov[REPS_KEY] = value;
@@ -309,6 +310,24 @@ class AMRAPWorkout extends Workout{
       }
       return Row(children : children);
     }).toList();
+  }
+
+  AMRAPWorkout.fromWorkout(AMRAPWorkout w) {
+    this.id = w.id;
+    this.round = w.round.map((Map<String, dynamic> item) {return new Map<String, dynamic>.from(item);}).toList();
+    this.type = w.type;
+    this.name = w.name;
+    this.time = w.time;
+  }
+
+  @override
+  bool operator ==(other) {
+    Function deepEq = const DeepCollectionEquality().equals;
+    return (other is AMRAPWorkout)
+        && other.id == this.id
+        && other.type == this.type
+        && other.time == this.time
+        && deepEq(other.round, this.round);
   }
 }
 
@@ -375,7 +394,7 @@ class ForTimeWorkout extends Workout {
 
   List<Row> getWorkoutUpdateForm() {
     return this.round.map((Map<String, dynamic> mov) {
-      var children = [
+      var children = <Widget>[
         workoutInputBox(mov[REPS_KEY].toString(), (String value) {
           mov[REPS_KEY] = value;
         }),
