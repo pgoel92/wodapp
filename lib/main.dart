@@ -17,6 +17,10 @@ Model model = Model();
 TextStyle globalTextStyle = TextStyle(fontSize: 18);
 TextStyle fallbackTextStyle = TextStyle(fontSize: 18, color: Colors.grey[400]);
 
+Future<Program> futureWod;
+Future<List<Score>> futureScores;
+Future<List<Score>> previousScores;
+
 String getDisplayDate() {
   return DateFormat('yyyy-MM-dd').format(date.subtract(new Duration(days: daysAgo)));
 }
@@ -92,6 +96,14 @@ class HomePageWidget extends StatefulWidget {
 }
 
 class _HomePageWidgetState extends State<HomePageWidget> {
+  String displayDate;
+  @override
+  void initState() {
+    super.initState();
+    displayDate = DateFormat('yyyy-MM-dd').format(date.subtract(new Duration(days: daysAgo)));
+    futureWod = fetch_wod(displayDate);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -103,7 +115,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                 child : SizedBox(
                     width : mainWidth,
                     child : FutureBuilder<Program>(
-                        future: fetch_wod(getDisplayDate()),
+                        future: futureWod,
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
                             var data = snapshot.data;
@@ -137,7 +149,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                       padding: const EdgeInsets.all(10.0),
                                       child : IconButton(icon: Icon(CupertinoIcons.plus_circle), color: iconColor, onPressed: _pushSaved)
                                   )),
-                                  ListScoresWidget()
+                                  ListScoresWidget(displayDate : displayDate)
                                 ]
                             );
                           } else if (snapshot.hasError) {
@@ -152,10 +164,22 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   }
 
   void _subtractDate () {
-    setState(() { daysAgo = daysAgo + 1; });
+    daysAgo = daysAgo + 1;
+    displayDate = DateFormat('yyyy-MM-dd').format(date.subtract(new Duration(days: daysAgo)));
+    setState(() {
+      futureWod = fetch_wod(displayDate);
+      futureScores = fetch_scores(displayDate);
+      previousScores = fetch_customer_scores(displayDate, model.wod.workout.id);
+    });
   }
   void _addDate () {
-    setState(() { daysAgo = daysAgo - 1; });
+    daysAgo = daysAgo - 1;
+    displayDate = DateFormat('yyyy-MM-dd').format(date.subtract(new Duration(days: daysAgo)));
+    setState(() {
+      futureWod = fetch_wod(displayDate);
+      futureScores = fetch_scores(displayDate);
+      previousScores = fetch_customer_scores(displayDate, model.wod.workout.id);
+    });
   }
 
   void _pushSaved() {
@@ -272,7 +296,8 @@ class _WodUpdateWidgetState extends State<WodUpdateWidget> {
 }
 
 class WodSearchWidget extends StatefulWidget {
-  WodSearchWidget({Key key}) : super(key: key);
+  String displayDate;
+  WodSearchWidget({Key key, this.displayDate}) : super(key: key);
 
   @override
   _WodSearchWidgetState createState() => _WodSearchWidgetState();
@@ -340,7 +365,7 @@ class _WodSearchWidgetState extends State<WodSearchWidget> {
                     RaisedButton(
                         padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                         onPressed: () {
-                          put_wod(getDisplayDate(), w.id);
+                          put_wod(widget.displayDate, w.id);
                           Navigator.of(context).pop();
                           },
                         child: Text('Select',
@@ -472,7 +497,8 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
 }
 
 class ListScoresWidget extends StatefulWidget {
-  ListScoresWidget({Key key}) : super(key: key);
+  String displayDate;
+  ListScoresWidget({Key key, this.displayDate}) : super(key: key);
 
   @override
   _ListScoresWidgetState createState() => _ListScoresWidgetState();
@@ -483,6 +509,8 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
   @override
   void initState() {
     super.initState();
+    futureScores = fetch_scores(widget.displayDate);
+    previousScores = fetch_customer_scores(widget.displayDate, model.wod.workout.id);
   }
 
   @override
@@ -492,13 +520,13 @@ class _ListScoresWidgetState extends State<ListScoresWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children : [
               Container(padding : EdgeInsets.all(10),child : Text('Scores', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 20))),
-              scoreBuilder(fetch_scores(getDisplayDate())),
+              scoreBuilder(futureScores),
               Center(child :Padding(
                   padding: const EdgeInsets.all(10.0),
                   child : IconButton(icon: Icon(CupertinoIcons.plus_circle), color: iconColor, onPressed: _pushSaved)
               )),
               Container(padding : EdgeInsets.all(10),child : Text('Previous scores', style : TextStyle(fontWeight: FontWeight.bold, fontSize: 20))),
-              scoreBuilder(fetch_customer_scores(getDisplayDate(), model.wod.workout.id))
+              scoreBuilder(previousScores)
             ]
 
     );
