@@ -10,20 +10,11 @@ import './src/utils/utils.dart';
 Text appTitle = Text('Workout of the Day',  style : TextStyle(fontWeight: FontWeight.bold, fontSize: 25));
 double verticalPadding = 20.0;
 double mainWidth = 1000.0;
-int daysAgo = 0;
 DateTime date = DateTime.now();
 Color iconColor = Colors.blue.shade300;
 Model model = Model();
 TextStyle globalTextStyle = TextStyle(fontSize: 18);
 TextStyle fallbackTextStyle = TextStyle(fontSize: 18, color: Colors.grey[400]);
-
-Future<Program> futureWod;
-Future<List<Score>> futureScores;
-Future<List<Score>> previousScores;
-
-String getDisplayDate() {
-  return DateFormat('yyyy-MM-dd').format(date.subtract(new Duration(days: daysAgo)));
-}
 
 void main() {
   runApp(MyApp());
@@ -91,17 +82,23 @@ class _MyAppState extends State<MyApp> {
 }
 
 class HomePageWidget extends StatefulWidget {
+
   @override
   _HomePageWidgetState createState() => _HomePageWidgetState();
 }
 
 class _HomePageWidgetState extends State<HomePageWidget> {
+  Future<Program> futureWod;
+  StreamController<int> _controller = StreamController<int>();
+  StreamController<Program> _pController = StreamController<Program>();
+  int daysAgo = 0;
   String displayDate;
   @override
   void initState() {
     super.initState();
     displayDate = DateFormat('yyyy-MM-dd').format(date.subtract(new Duration(days: daysAgo)));
     futureWod = fetch_wod(displayDate);
+    _controller.add(daysAgo);
   }
 
   @override
@@ -120,6 +117,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                           if (snapshot.hasData) {
                             var data = snapshot.data;
                             model.wod = data;
+                            if (model.wod.workout.id != -1) {
+                              _pController.add(model.wod);
+                            }
                             return Column(
                                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                 children: [
@@ -149,7 +149,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                       padding: const EdgeInsets.all(10.0),
                                       child : IconButton(icon: Icon(CupertinoIcons.plus_circle), color: iconColor, onPressed: _pushSaved)
                                   )),
-                                  ListScoresWidget(displayDate : displayDate)
+                                  ListScoresWidget(stream: _controller.stream,  pStream: _pController.stream)
                                 ]
                             );
                           } else if (snapshot.hasError) {
@@ -166,19 +166,17 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   void _subtractDate () {
     daysAgo = daysAgo + 1;
     displayDate = DateFormat('yyyy-MM-dd').format(date.subtract(new Duration(days: daysAgo)));
+    _controller.add(daysAgo);
     setState(() {
       futureWod = fetch_wod(displayDate);
-      futureScores = fetch_scores(displayDate);
-      previousScores = fetch_customer_scores(displayDate, model.wod.workout.id);
     });
   }
   void _addDate () {
     daysAgo = daysAgo - 1;
     displayDate = DateFormat('yyyy-MM-dd').format(date.subtract(new Duration(days: daysAgo)));
+    _controller.add(daysAgo);
     setState(() {
       futureWod = fetch_wod(displayDate);
-      futureScores = fetch_scores(displayDate);
-      previousScores = fetch_customer_scores(displayDate, model.wod.workout.id);
     });
   }
 
@@ -489,28 +487,48 @@ class _ScoreWidgetState extends State<AddScoreWidget> {
     return wod.workout.scoreInputColumn(model);
   }
 
-
-
   List<dynamic> getAthleteNames(athletes) {
     return athletes.map((athlete) => (athlete['first_name'] + " " + athlete['last_name'])).toList();
   }
 }
 
 class ListScoresWidget extends StatefulWidget {
+  final Stream<int> stream;
+  final Stream<Program> pStream;
   String displayDate;
-  ListScoresWidget({Key key, this.displayDate}) : super(key: key);
+  ListScoresWidget({Key key, this.stream,  this.pStream}) : super(key: key);
 
   @override
   _ListScoresWidgetState createState() => _ListScoresWidgetState();
 }
 
 class _ListScoresWidgetState extends State<ListScoresWidget> {
+  Future<List<Score>> futureScores;
+  Future<List<Score>> previousScores;
 
   @override
   void initState() {
     super.initState();
-    futureScores = fetch_scores(widget.displayDate);
-    previousScores = fetch_customer_scores(widget.displayDate, model.wod.workout.id);
+    widget.stream.asBroadcastStream().listen((daysAgo) {
+      _update(daysAgo);
+    });
+    widget.pStream.asBroadcastStream().listen((program) {
+      _updateProgram(program);
+    });
+  }
+
+  void _update(int daysAgo) {
+    setState(() {
+      widget.displayDate = DateFormat('yyyy-MM-dd').format(date.subtract(new Duration(days: daysAgo)));
+      futureScores = fetch_scores(widget.displayDate);
+      previousScores = fetch_customer_scores(widget.displayDate, model.wod.workout.id);
+    });
+  }
+
+  void _updateProgram(Program wod) {
+    setState(() {
+      previousScores = fetch_customer_scores(widget.displayDate, wod.workout.id);
+    });
   }
 
   @override
