@@ -81,6 +81,42 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
+Widget drawer = Drawer(
+  child : ListView(
+    // Important: Remove any padding from the ListView.
+    padding: EdgeInsets.zero,
+    children: <Widget>[
+      Container(
+        child : DrawerHeader(
+          child: Container(
+            child : Column(children : [Container(child : Text('Arun Kumar Goel', style : globalTextStyle), alignment : Alignment.bottomLeft),
+                                       Container(child : Text('1000 pts', style : TextStyle(fontSize: 16, color: Colors.grey[400])), alignment : Alignment.bottomLeft)]),
+            alignment : Alignment.bottomLeft,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.black12,
+          ),
+        ),
+        height : 100
+      ),
+      ListTile(
+        title: Text('History', style : globalTextStyle),
+        onTap: () {
+          // Update the state of the app.
+          // ...
+        },
+      ),
+      ListTile(
+        title: Text('Settings', style : globalTextStyle),
+        onTap: () {
+          // Update the state of the app.
+          // ...
+        },
+      ),
+    ],
+  ),
+);
+
 class HomePageWidget extends StatefulWidget {
 
   @override
@@ -107,6 +143,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
             appBar: AppBar(
               title: appTitle,
             ),
+            drawer: drawer,
             body: SingleChildScrollView(child: Center(child : Container(
                 padding : EdgeInsets.symmetric(vertical : verticalPadding),
                 child : SizedBox(
