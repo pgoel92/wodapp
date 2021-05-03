@@ -188,6 +188,7 @@ class Workout {
     switch(w.type) {
       case "for_time": {return ForTimeWorkout.fromWorkout(w);}
       case "amrap": {return AMRAPWorkout.fromWorkout(w);}
+      case "21-15-9": {return TwentyOne_Fifteen_Nine.fromWorkout(w);}
     }
     return Workout(
         id: w.id,
@@ -504,5 +505,23 @@ class TwentyOne_Fifteen_Nine extends Workout {
       return Row(children : children);
     }).toList();
     return rows;
+  }
+
+  TwentyOne_Fifteen_Nine.fromWorkout(TwentyOne_Fifteen_Nine w) {
+    this.id = w.id;
+    this.round = w.round.map((Map<String, dynamic> item) {return new Map<String, dynamic>.from(item);}).toList();
+    this.type = w.type;
+    this.name = w.name;
+    this.n_reps = w.n_reps;
+  }
+
+  @override
+  bool operator ==(other) {
+    Function deepEq = const DeepCollectionEquality().equals;
+    return (other is TwentyOne_Fifteen_Nine)
+        && other.id == this.id
+        && other.type == this.type
+        && other.n_reps == this.n_reps
+        && deepEq(other.round, this.round);
   }
 }

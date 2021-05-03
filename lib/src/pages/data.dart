@@ -18,6 +18,7 @@ Future<Program> fetch_wod(date) async {
         wod = Program.fromJson(myjson);
       } catch (e) {
         print('Unable to parse wod');
+        print(e);
         wod = Program.empty();
       }
       return wod;
